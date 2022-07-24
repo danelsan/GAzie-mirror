@@ -88,12 +88,11 @@ html body.skin-blue.sidebar-mini.sidebar-collapse form div.wrapper header.main-h
   width: 65px;
 }
 .row.alternate-row-odd{
-  background-color: #eeeeee;
+  background-color: #eeeeee2b;
 }
 .row.alternate-row-even{
-  background-color: #cccccc;
+  background-color: #cccccc08;
 }
-
 .btn-effetti {
   background-color: #D4CB6A;
   color : #fff;

@@ -234,3 +234,7 @@ a, .panel-info {
 .content-header > .breadcrumb > li > a {
 	background-color: transparent;
 }
+nav.navbar.navbar-static-top.company-color-bright {
+	background: linear-gradient(to right, #0000 0%, #02020236 70%) no-repeat;
+}
+

@@ -113,7 +113,6 @@ if (isset( $scriptname) && $scriptname != $prev_script && $scriptname != 'admin.
         <style>
             .company-color, .company-color-bright, li.user-header {
               background-color: #<?php echo $admin_aziend['colore']; ?>;
-              filter: brightness(120%);
               color: black;
             }
             .company-color-logo {

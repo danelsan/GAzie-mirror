@@ -1559,8 +1559,8 @@ if ($next_row > 0) {
 				<td class="text-right">' . number_format($totivafat, 2, '.', '') . '</td>
 				<td class="text-right">' . $quatot . '</td>
 				<td class="text-right">' . number_format(($totimpfat + $totivafat), 2, '.', '') . '</td>
-			  </tr></table></div></br>';
-  echo '<div class="col-xs-12 text-center">';
+			  </tr></table>';
+  echo '<div class="col-xs-12 FacetFooterTD text-center">';
   if ($toDo == 'update') {
     echo '<input type="submit" class="btn btn-warning" accesskey="m" name="ins" id="preventDuplicate" onClick="chkSubmit();" value="Modifica" />';
   } else {
@@ -1568,7 +1568,7 @@ if ($next_row > 0) {
   }
   echo '</div>';
 } else {
-  echo '</table></div>';
+  echo '</table>';
 }
 // *** FINE FOOTER
 ?></div></form>

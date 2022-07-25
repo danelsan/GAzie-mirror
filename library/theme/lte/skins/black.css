@@ -137,6 +137,11 @@ td.ui-datepicker-other-month>a.ui-state-default.ui-priority-secondary{
 	color: #FFFFFF;
 	box-shadow: 1px 1px 1px 1px gray;
 }
+.btn-default {
+	background-color: #ddd;
+	color: #000;
+	box-shadow: 1px 1px 1px 1px gray;
+}
 .panel {
   background-color: #3c3937
 }
@@ -237,4 +242,6 @@ a, .panel-info {
 nav.navbar.navbar-static-top.company-color-bright {
 	background: linear-gradient(to right, #0000 0%, #02020236 70%) no-repeat;
 }
-
+.modal .panel-body {
+	color: #fdf8cc;
+}

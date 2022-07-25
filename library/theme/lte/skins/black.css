@@ -245,3 +245,8 @@ nav.navbar.navbar-static-top.company-color-bright {
 .modal .panel-body {
 	color: #fdf8cc;
 }
+div#fattura-container {
+	background-color: #fff;
+	padding: 30px;
+	color: #000;
+}

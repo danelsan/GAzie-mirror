@@ -1792,7 +1792,7 @@ if ($form['order_type'] <> "AGR") { // input esclusi se NON produzione agricola
   echo "<input type=\"hidden\" name=\"lot_or_serial\" value=\"\"></td></tr>";
 }
 if ($popup <> 1) {
-  echo '<tr><td></td><td class="text-center" >';
+  echo '<tr class="FacetFooterTD"><td></td><td class="text-center" >';
 } else {
   echo '<tr class="FacetFooterTD"><td></td><td class="text-center" >';
 }

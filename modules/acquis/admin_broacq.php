@@ -1514,8 +1514,8 @@ echo "	</td>
                                 <input type=\"hidden\" name=\"destin\" value=\"" . $form['destin'] . "\" />
 						</td>\n";
     } else {
-        echo "			<td class=\"FacetDataTD\">";
-        echo "				<textarea rows=\"1\" cols=\"30\" name=\"destin\" class=\"FacetInput\">" . $form["destin"] . "</textarea>
+        echo '<td class="FacetDataTD text-center" colspan=2>';
+        echo "<textarea rows=\"1\" cols=\"40\" name=\"destin\" class=\"FacetInput\">" . $form["destin"] . "</textarea>
 						</td>
 						<input type=\"hidden\" name=\"id_des_same_company\" value=\"" . $form['id_des_same_company'] . "\">
 						<input type=\"hidden\" name=\"id_des\" value=\"" . $form['id_des'] . "\">

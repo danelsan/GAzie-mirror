@@ -26,8 +26,8 @@ require("../../library/include/datlib.inc.php");
 
 $admin_aziend=checkAdmin();
 
-require("../../library/include/header.php");
-$script_transl=HeadMain();
+//require("../../library/include/header.php");
+//$script_transl=HeadMain();
 //
 // Se esiste, viene incluso il file "help/italian/docume_finean_help.php",
 // o l'equivalente di un altro linguaggio.

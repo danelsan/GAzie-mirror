@@ -39,8 +39,9 @@ if (isset($_GET['filename'])) {
   $doc = gaz_dbi_get_row($gTables['files'],'id_doc',intval($_GET['id_doc']));
 	$filepath=$admin_aziend['company_id']."/doc/".$doc['id_doc'].'.'.$doc['extension'];
 }
+
 header("Content-Type: application/".$doc['extension']);
-header('Content-Disposition: attachment; filename="'.$doc['title'].'"');
+header('Content-Disposition: attachment; filename="'.$doc['title'].'.'.$doc['extension'].'"');
 // data retrieved from filesystem
 $doc=file_get_contents(DATA_DIR.'files/'.$filepath);
 echo $doc;

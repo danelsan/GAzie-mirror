@@ -139,6 +139,7 @@ echo "<input type=\"hidden\" name=\"ritorno\" value=\"".$form['ritorno']."\">\n"
 echo "<input type=\"hidden\" name=\"extension\" value=\"".$form['extension']."\">\n";
 echo "<input type=\"hidden\" name=\"item_ref\" value=\"".$form['item_ref']."\">\n";
 echo "<input type=\"hidden\" name=\"".ucfirst($toDo)."\" value=\"\">";
+echo "<input type=\"hidden\" name=\"title\" value=\"".$form['title']."\" maxlength=\"50\"  />\n";
 echo "<table class=\"Tmiddle table-striped\">\n";
 if (!empty($msg)) {
     echo '<tr><td colspan="3" class="FacetDataTDred">'.$gForm->outputErrors($msg,$script_transl['errors'])."</td></tr>\n";
@@ -159,11 +160,6 @@ echo "</tr>\n";
 echo "<tr>\n";
 echo "\t<td class=\"FacetFieldCaptionTD\">".$script_transl['item']."</td>\n";
 echo "\t<td colspan=\"2\" class=\"FacetDataTD\">".$form['item_ref']."</td>\n";
-echo "</tr>\n";
-echo "<tr>\n";
-echo "\t<td class=\"FacetFieldCaptionTD\">".$script_transl['note']."</td>\n";
-echo "\t<td colspan=\"2\" class=\"FacetDataTD\">
-      <input type=\"text\" name=\"title\" value=\"".$form['title']."\" maxlength=\"50\"  /></td>\n";
 echo "</tr>\n";
 echo "<tr>\n";
 echo "\t<td class=\"FacetFieldCaptionTD\">".$script_transl['sqn']."</td>";

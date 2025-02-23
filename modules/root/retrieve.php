@@ -46,26 +46,14 @@ if (strlen (substr(strrchr($doc['title'], "."), 1))<3){// aggiungo al title l'es
 //switch per content type
 switch ($doc['extension']) {
   case 'xml':
-    $cont="application";
-    break;
   case 'pdf':
-    $cont="application";
-    break;
   case 'zip':
     $cont="application";
     break;
   case 'gif':
-    $cont="image";
-  break;
   case 'jpeg':
-    $cont="image";
-  break;
   case 'png':
-    $cont="image";
-  break;
   case 'svg':
-    $cont="image";
-  break;
   case 'icon':
     $cont="image";
   break;

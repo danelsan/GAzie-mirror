@@ -44,7 +44,8 @@ if (strlen (substr(strrchr($doc['title'], "."), 1))<3){// aggiungo al title l'es
   $doc['title'] .= ".".$doc['extension'];
 }
 //switch per content type
-switch ($doc['extension']) {
+$lowext=strtolower($doc['extension']);
+switch ($lowext) {
   case 'xml':
   case 'pdf':
   case 'zip':
@@ -60,12 +61,11 @@ switch ($doc['extension']) {
   case 'txt':
     $cont="text";
   break;
-
   default:
     $cont="application";
 }
 
-header("Content-Type: ".$cont."/".$doc['extension']);
+header("Content-Type: ".$cont."/".$lowext);
 header('Content-Disposition: attachment; filename="'.$doc['title'].'"');
 // data retrieved from filesystem
 $doc=file_get_contents(DATA_DIR.'files/'.$filepath);

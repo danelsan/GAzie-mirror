@@ -57,7 +57,7 @@ if(strlen($accpass)>0){
   // non ho una password, non posso continuare
   ?>
   <script>
-  alert("<?php echo "Controllare impostazioni FTP (password) "; ?>");
+  alert("<?php echo "Controllare impostazioni FTP (password accesso all'interfaccia) "; ?>");
   location.replace("./synchronize.php");
   </script>
   <?php
@@ -90,7 +90,20 @@ if (gaz_dbi_get_row($gTables['company_config'], 'var', 'Sftp')['val']=="SI"){
 	$ftp_key = gaz_dbi_get_row($gTables['company_config'], "var", "chiave")['val'];
 
 	if (gaz_dbi_get_row($gTables['company_config'], "var", "keypass")['val']=="key"){ // SFTP log-in con KEY
-		$key = PublicKeyLoader::load(file_get_contents('../../data/files/'.$admin_aziend['codice'].'/secret_key/'. $ftp_key .''),$ftp_pass);
+
+    try {
+      $key = PublicKeyLoader::load(file_get_contents('../../data/files/'.$admin_aziend['codice'].'/secret_key/'. $ftp_key ),$ftp_pass);
+    }
+    catch(Exception $e) {
+      ?>
+			<script>
+			alert("<?php echo 'SFTP Error Message: ' .$e->getMessage();
+      echo " Controlla percorso e password della chiave pubblica. Se stai usando un server locale, controlla anche che sia installato e abilitato SSH"; ?>");
+			location.replace("./synchronize.php");
+			</script>
+			<?php
+      exit;
+    }
 
 		$sftp = new SFTP($ftp_host, $ftp_port);
 		if (!$sftp->login($ftp_user, $key)) {

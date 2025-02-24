@@ -52,6 +52,7 @@ $ftp_pass=$rdec?htmlspecialchars_decode($rdec[0]):'';
 $ftp_pass=(strlen($ftp_pass)>0)?$ftp_pass:$OSftp_pass; // se la password decriptata non ha dato risultati provo a vedere se c'è ancora una password non criptata
 $rsdec=gaz_dbi_query("SELECT AES_DECRYPT(FROM_BASE64(val),'".$_SESSION['aes_key']."') FROM ".$gTables['company_config']." WHERE var = 'accpass'");
 $rdec=gaz_dbi_fetch_row($rsdec);
+$rdec[0]=$rdec[0]??'';
 $accpass=$rdec?htmlspecialchars_decode($rdec[0]):'';
 if(strlen($accpass)>0){
   // ho la password criptata e la uso

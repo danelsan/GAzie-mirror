@@ -52,7 +52,7 @@ $enable_sync = explode(",",$getenable_sync);
 			}
 			$exten = strtolower(pathinfo($_FILES['myfile']['name'], PATHINFO_EXTENSION));
 			$file_pattern = $path.$_FILES['myfile']['name'];
-			unlink ( $file_pattern );
+			@unlink ( $file_pattern );// nel caso non esistesse perché è cambiato il nome evito segnalazione errore
 			move_uploaded_file($_FILES['myfile']['tmp_name'], $file_pattern);
 
 		}

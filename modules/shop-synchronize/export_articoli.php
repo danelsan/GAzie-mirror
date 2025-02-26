@@ -106,9 +106,27 @@ if (isset($_POST['conferma'])) { // se confermato
 		// SFTP login with private key and password
 		$ftp_port = gaz_dbi_get_row($gTables['company_config'], "var", "port")['val'];
 		$ftp_key = gaz_dbi_get_row($gTables['company_config'], "var", "chiave")['val'];
+    $rsdec=gaz_dbi_query("SELECT AES_DECRYPT(FROM_BASE64(val),'".$_SESSION['aes_key']."') FROM ".$gTables['company_config']." WHERE var = 'psw_chiave'");
+    $rdec=gaz_dbi_fetch_row($rsdec);
+    $rdec[0]=$rdec[0]??'';
+    $ftp_keypass=$rdec?htmlspecialchars_decode($rdec[0]):'';
 
-		if (gaz_dbi_get_row($gTables['company_config'], "var", "keypass")['val']=="key"){ // SFTP log-in con KEY
-			$key = PublicKeyLoader::load(file_get_contents('../../data/files/'.$admin_aziend['codice'].'/secret_key/'. $ftp_key .''),$ftp_pass);
+		if (gaz_dbi_get_row($gTables['company_config'], "var", "keypass")['val']=="key"){ // SFTP log-in con KEY    
+			
+      try {
+        $key = PublicKeyLoader::load(file_get_contents('../../data/files/'.$admin_aziend['codice'].'/secret_key/'. $ftp_key ),$ftp_keypass);
+      }
+      catch(Exception $e) {
+        ?>
+        <script>
+        alert("<?php echo 'SFTP Error Message: ' .$e->getMessage();
+        echo " Controlla percorso e password della chiave pubblica. Se stai usando un server locale, controlla anche che sia installato e abilitato SSH"; ?>");
+        location.replace("./synchronize.php");
+        </script>
+        <?php
+        exit;
+      }
+
 
 			$sftp = new SFTP($ftp_host, $ftp_port);
 			if (!$sftp->login($ftp_user, $key)) {

@@ -121,7 +121,10 @@ class shopsynchronizegazSynchro {
 				$ftp_port = gaz_dbi_get_row($gTables['company_config'], "var", "port")['val'];
 				$ftp_key = gaz_dbi_get_row($gTables['company_config'], "var", "chiave")['val'];
 				if (gaz_dbi_get_row($gTables['company_config'], "var", "keypass")['val']=="key"){ // SFTP log-in con KEY
-					$key = PublicKeyLoader::load(file_get_contents('../../data/files/'.$admin_aziend['codice'].'/secret_key/'. $ftp_key .''),$ftp_pass);
+          $rsdec=gaz_dbi_query("SELECT AES_DECRYPT(FROM_BASE64(val),'".$_SESSION['aes_key']."') FROM ".$gTables['company_config']." WHERE var = 'psw_chiave'");
+          $rdec=gaz_dbi_fetch_row($rsdec);
+          $ftp_keypass=$rdec[0]?htmlspecialchars_decode($rdec[0]):'';
+					$key = PublicKeyLoader::load(file_get_contents('../../data/files/'.$admin_aziend['codice'].'/secret_key/'. $ftp_key .''),$ftp_keypass);
 					$sftp = new SFTP($ftp_host, $ftp_port);
 					if (!$sftp->login($ftp_user, $key)) {
 						// non si connette: key LOG-IN FALSE

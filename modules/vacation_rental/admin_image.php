@@ -161,7 +161,7 @@ echo "<tr>\n";
 
 echo "\t<td class=\"FacetFieldCaptionTD\">File : </td>\n";
 echo "\t<td class=\"FacetDataTD\">
-			<a class=\"btn btn-xs btn-default\" href=\"../root/retrieve.php?id_ref=image&id_doc=".$form["id_doc"]."\" title=\"".$script_transl['view']."!\">
+			<a class=\"btn btn-xs btn-default\" href=\"../root/retrieve.php?id_ref=".$form["id_doc"]."\" title=\"".$script_transl['view']."!\">
 				<i class=\"glyphicon glyphicon-eye-open\"></i>&nbsp;".DATA_DIR."files/".$form['id_doc'].".".$form['extension']."
 			</a>
 		</td>\n";

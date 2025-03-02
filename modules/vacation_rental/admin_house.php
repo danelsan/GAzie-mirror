@@ -129,7 +129,7 @@ if (isset($_POST['Insert']) || isset($_POST['Update'])) {   //se non e' il primo
     $form['lang_web_url'.$lang['lang_id']]=filter_var(substr($_POST['lang_web_url'.$lang['lang_id']],0,100), FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   }
 	$form['hidden_req'] = $_POST['hidden_req'];
-
+  $form['tab'] = substr($_POST['tab'],0,20);
   if (isset ($_GET['codice'])){
 	$query = "SELECT * FROM " . $gTables['rental_ical'] . " WHERE codice_alloggio = '".substr($_GET['codice'],0,32)."' ORDER BY id ASC";
 	$resical = gaz_dbi_query($query);
@@ -457,7 +457,7 @@ if (isset($_POST['Insert']) || isset($_POST['Update'])) {   //se non e' il primo
         $form['ritorno'] = 'admin_artico.php';
     }
 	$form['hidden_req'] = '';
-
+  $form['tab'] = 'home';
 	$form['web_public_init']=$form['web_public'];
 	if ($data = json_decode($form['custom_field'], TRUE)) { // se esiste un json nel custom field
 
@@ -569,6 +569,7 @@ if (isset($_POST['Insert']) || isset($_POST['Update'])) {   //se non e' il primo
     } else {
         $form['ritorno'] = 'admin_artico.php';
     }
+    $form['tab'] = 'home';
     $form['hidden_req'] = '';
     $form['accommodation_type'] = '';
     $form['room_type'] = 0;
@@ -673,6 +674,10 @@ function calcDiscount() {
 }
 
 $(function () {
+  $('.tabtoggle').click(function() {
+    $("#tab").val($(this).attr("href").substring(1));
+  });
+
 	$("#dialog_delete").dialog({ autoOpen: false });
 	$('.dialog_delete').click(function() {
 		$("p#idcodice").html($(this).attr("ref"));
@@ -858,6 +863,7 @@ if ($modal === true) {
 }
 echo '<input type="hidden" name="ritorno" value="' . $form['ritorno'] . '" />';
 echo '<input type="hidden" name="hidden_req" value="' . $form['hidden_req'] . '" />';
+echo '<input type="hidden" value="'. $form['tab'] .'" name="tab" id="tab" />';
 echo '<input type="hidden" name="ref_code" value="' . $form['ref_code'] . '" />';
 
 if ($modal_ok_insert === true) {
@@ -906,10 +912,10 @@ if ($modal_ok_insert === true) {
         <div class="panel panel-default gaz-table-form div-bordered">
             <div class="container-fluid">
             <ul class="nav nav-pills">
-                <li class="active"><a data-toggle="pill" href="#home">Dati principali</a></li>
-                <li><a data-toggle="pill" href="#magazz">E-commerce</a></li>
-                <li><a data-toggle="pill" href="#contab">Contabilità</a></li>
-                <li><a data-toggle="pill" href="#chifis">Caratteristiche</a></li>
+                <li class="<?= $form['tab']=='home'?'active':''; ?>"><a data-toggle="pill" class="tabtoggle" href="#home">Dati principali</a></li>
+                <li class="<?= $form['tab']=='magazz'?'active':''; ?>"><a data-toggle="pill" class="tabtoggle" href="#magazz">E-commerce</a></li>
+                <li class="<?= $form['tab']=='contab'?'active':''; ?>"><a data-toggle="pill" class="tabtoggle" href="#contab">Contabilità</a></li>
+                <li class="<?= $form['tab']=='chifis'?'active':''; ?>"><a data-toggle="pill" class="tabtoggle" href="#chifis">Caratteristiche</a></li>
                 <li style="float: right;"><?php echo '<input name="Submit" type="submit" class="btn btn-warning" value="' . ucfirst($script_transl[$toDo]) . '" />'; ?></li>
                 <li class="">
                   <?php
@@ -918,7 +924,7 @@ if ($modal_ok_insert === true) {
                 </li>
             </ul>
             <div class="tab-content">
-              <div id="home" class="tab-pane fade in active">
+              <div id="home" class="tab-pane fade <?php echo $form['tab']=='home'?'in active':''; ?>">
                  <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
@@ -1120,7 +1126,7 @@ if ($modal_ok_insert === true) {
                     </div>
                 </div><!-- chiude row  -->
               </div><!-- chiude tab-pane  -->
-              <div id="magazz" class="tab-pane fade">
+              <div id="magazz" class="tab-pane fade <?php echo $form['tab']=='magazz'?'in active':''; ?>">
                 <!--+ DC - 06/02/2019 div class="row" --->
                 <div id="refEcommercIdProduct" class="row IERincludeExcludeRow">
                     <div class="col-md-12">
@@ -1217,7 +1223,7 @@ if ($modal_ok_insert === true) {
                   </div>
                 <?php } ?>
               </div><!-- chiude tab-pane  -->
-              <div id="contab" class="tab-pane fade">
+              <div id="contab" class="tab-pane fade <?php echo $form['tab']=='contab'?'in active':''; ?>">
                 <!--+ DC - 06/02/2019 div class="row" --->
                 <div id="webPrice" class="row IERincludeExcludeRow">
                     <div class="col-md-12">
@@ -1374,7 +1380,7 @@ if ($modal_ok_insert === true) {
                     </div>
                 </div><!-- chiude row  -->
               </div><!-- chiude tab-pane  -->
-              <div id="chifis" class="tab-pane fade">
+              <div id="chifis" class="tab-pane fade <?php echo $form['tab']=='chifiss'?'in active':''; ?>">
 				<div id="icals" class="row IERincludeExcludeRow">
 					<fieldset  style="border:1px solid silver;">
 					<legend style="color:blue; font-size:16px; margin-bottom:4px; text-align: center; border-top: 1px solid silver">Sincronizzazione Icalendar</legend>

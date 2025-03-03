@@ -93,7 +93,6 @@ if (isset($_POST['Insert']) || isset($_POST['Update'])) {   //se non e' il primo
           for ($n = 0; $n < count($row['title']); $n++){
               $form['title']=$row['title'][$n];
               $form['extension']=$row['extension'][$n];
-              echo "<br>processo:",$form['title']," - ",$form['extension'], " -n:",$n;
               // aggiorno il db
               if ($toDo == 'insert') {
                 $form['table_name_ref']= 'artico';

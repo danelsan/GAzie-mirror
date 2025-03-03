@@ -126,7 +126,7 @@ if (isset($_POST['Insert']) || isset($_POST['Update'])) {   //se non e' il primo
   foreach($langs as $lang){
     $form['lang_descri'.$lang['lang_id']]=filter_var(substr($_POST['lang_descri'.$lang['lang_id']],0,100), FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     $form['lang_bodytext'.$lang['lang_id']]=filter_var($_POST['lang_bodytext'.$lang['lang_id']], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    $form['lang_web_url'.$lang['lang_id']]=filter_var(substr($_POST['lang_web_url'.$lang['lang_id']],0,100), FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $form['lang_web_url'.$lang['lang_id']]=filter_var(substr($_POST['lang_web_url'.$lang['lang_id']],0,200), FILTER_SANITIZE_FULL_SPECIAL_CHARS);
   }
 	$form['hidden_req'] = $_POST['hidden_req'];
   $form['tab'] = substr($_POST['tab'],0,20);
@@ -1145,7 +1145,7 @@ if ($modal_ok_insert === true) {
                             <?php
                               if ($form['lang_id']>1) {
                                 ?>
-                                <input class="col-xs-12 col-md-8" type="text" value="<?php echo $form['lang_web_url'.$form['lang_id']]; ?>" name="lang_web_url<?php echo $form['lang_id']; ?>" maxlength="255" id="suggest_descri_artico" />
+                                <input class="col-xs-12 col-md-8" type="text" value="<?php echo $form['lang_web_url'.$form['lang_id']]; ?>" name="lang_web_url<?php echo $form['lang_id']; ?>" id="suggest_descri_artico" />
                                 <input type="hidden" value="<?php echo $form['web_url']; ?>" name="web_url" />
                                 <?php
                                  foreach($langs as $lang){
@@ -1158,7 +1158,7 @@ if ($modal_ok_insert === true) {
                                  }
                               } else {
                                 ?>
-                                <input class="col-xs-12 col-md-8" type="text" value="<?php echo $form['web_url']; ?>" name="web_url" maxlength="255" id="suggest_web_url" />
+                                <input class="col-xs-12 col-md-8" type="text" value="<?php echo $form['web_url']; ?>" name="web_url" id="suggest_web_url" />
                                 <?php
                                  foreach($langs as $lang){
                                    ?>

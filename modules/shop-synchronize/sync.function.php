@@ -606,12 +606,12 @@ class shopsynchronizegazSynchro {
         $xml_output .= "\t<Name>".$p['web_url']."</Name>\n";
         foreach($langs as $lang){// carico le traduzioni dal DB e le metto nelle rispettive lingue
           $bodytextlang = gaz_dbi_get_row($gTables['body_text'], "table_name_ref", 'artico', " AND code_ref = '".substr($p['id_artico_group'],0,32)."' AND lang_id = ".$lang['lang_id']);
-          $lang_descri = (isset($bodytextlang['descri']))?$bodytextlang['descri']:$p['descri'];
-          $lang_bodytext = (isset($bodytextlang['body_text']))?$bodytextlang['body_text']:filter_var($p['large_descri'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+          $lang_descri = (isset($bodytextlang['descri']))?html_entity_decode($bodytextlang['descri']):$p['descri'];
+          $lang_bodytext = (isset($bodytextlang['body_text']))?html_entity_decode($bodytextlang['body_text']):$p['large_descri'];
           $obj = (isset($bodytextlang['custom_field']))?json_decode($bodytextlang['custom_field']):'';
           $lang_web_url = (isset($obj->web_url))?$obj->web_url:$p['web_url'];
           // invio i testi multilingua
-          $xml_output .= "\t<Name-".$lang['lang_id'].">".$lang_descri."</Name-".$lang['lang_id'].">\n";
+          $xml_output .= "\t<Name-".$lang['lang_id'].">".preg_replace('/[\x00-\x1f]/','',htmlspecialchars($lang_descri, ENT_QUOTES, 'UTF-8'))."</Name-".$lang['lang_id'].">\n";
           $xml_output .= "\t<Description-".$lang['lang_id'].">".preg_replace('/[\x00-\x1f]/','',htmlspecialchars($lang_bodytext, ENT_QUOTES, 'UTF-8'))."</Description-".$lang['lang_id'].">\n";
           $xml_output .= "\t<WebUrl-".$lang['lang_id'].">".$lang_web_url."</WebUrl-".$lang['lang_id'].">\n";
         }
@@ -646,12 +646,12 @@ class shopsynchronizegazSynchro {
               $xml_output .= "\t<WebUrl>".$var['web_url']."</WebUrl>\n";
               foreach($langs as $lang){// carico le traduzioni dal DB e le metto nelle rispettive lingue
                 $bodytextlang = gaz_dbi_get_row($gTables['body_text'], "table_name_ref", 'artico', " AND code_ref = '".substr($var['codice'],0,32)."' AND lang_id = ".$lang['lang_id']);
-                $lang_descri = (isset($bodytextlang['descri']))?$bodytextlang['descri']:$var['descri'];
-                $lang_bodytext = (isset($bodytextlang['body_text']))?$bodytextlang['body_text']:filter_var($body['body_text'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                $lang_descri = (isset($bodytextlang['descri']))?html_entity_decode($bodytextlang['descri']):$var['descri'];
+                $lang_bodytext = (isset($bodytextlang['body_text']))?html_entity_decode($bodytextlang['body_text']):$body['body_text'];
                 $obj = json_decode($bodytextlang['custom_field']);
                 $lang_web_url = (isset($obj->web_url))?$obj->web_url:$var['web_url'];
                 // invio i testi multilingua
-                $xml_output .= "\t<Name-".$lang['lang_id'].">".$lang_descri."</Name-".$lang['lang_id'].">\n";
+                $xml_output .= "\t<Name-".$lang['lang_id'].">".preg_replace('/[\x00-\x1f]/','',htmlspecialchars($lang_descri, ENT_QUOTES, 'UTF-8'))."</Name-".$lang['lang_id'].">\n";
                 $xml_output .= "\t<Description-".$lang['lang_id'].">".preg_replace('/[\x00-\x1f]/','',htmlspecialchars($lang_bodytext, ENT_QUOTES, 'UTF-8'))."</Description-".$lang['lang_id'].">\n";
                 $xml_output .= "\t<WebUrl-".$lang['lang_id'].">".$lang_web_url."</WebUrl-".$lang['lang_id'].">\n";
               }
@@ -907,12 +907,12 @@ class shopsynchronizegazSynchro {
           $xml_output .= "\t\t<Lang>\n";
           $xml_output .= "\t\t\t<lang_code>".$lang['lang_code']."</lang_code>\n";
           $bodytextlang = gaz_dbi_get_row($gTables['body_text'], "table_name_ref", 'artico', " AND code_ref = '".substr($d['codice'],0,32)."' AND lang_id = ".$lang['lang_id']);
-          $lang_descri = (isset($bodytextlang['descri']))?$bodytextlang['descri']:$d['descri'];
-          $lang_bodytext = (isset($bodytextlang['body_text']))?$bodytextlang['body_text']:filter_var($d['body_text'], FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+          $lang_descri = (isset($bodytextlang['descri']))?html_entity_decode($bodytextlang['descri']):$d['descri'];
+          $lang_bodytext = (isset($bodytextlang['body_text']))?html_entity_decode($bodytextlang['body_text']):$d['body_text'];
           $obj = (isset($bodytextlang['custom_field']))?json_decode($bodytextlang['custom_field']):'';
           $lang_web_url = (isset($obj->web_url))?$obj->web_url:$d['web_url'];
           // invio i testi multilingua
-          $xml_output .= "\t\t\t<Name>".$lang_descri."</Name>\n";
+          $xml_output .= "\t\t\t<Name>".preg_replace('/[\x00-\x1f]/','',htmlspecialchars($lang_descri, ENT_QUOTES, 'UTF-8'))."</Name>\n";
           $xml_output .= "\t\t\t<Description>".preg_replace('/[\x00-\x1f]/','',htmlspecialchars($lang_bodytext, ENT_QUOTES, 'UTF-8'))."</Description>\n";
           $xml_output .= "\t\t\t<WebUrl>".$lang_web_url."</WebUrl>\n";
           $xml_output .= "\t\t</Lang>\n";

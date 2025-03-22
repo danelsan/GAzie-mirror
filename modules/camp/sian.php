@@ -292,14 +292,13 @@ if (isset($_POST['preview']) and $msg=='') {
         echo "</tr>";
 		$genera="";
 		$nr=0;$message_rem="";
-        foreach($m as $key => $mv){
+     foreach($m as $key => $mv){
 			$er="";
 			if ($mv['id_movmag']>0){ // se è un movimento del SIAN connesso al movimento di magazzino
 			$legenda_cod_op= array('1'=>'Confezionamento con etichettatura','2'=>'Confezionamento senza etichettatura','3'=>'Etichettatura','4'=>'Svuotamento di olio confezionato','5'=>'Movimentazione interna senza cambio di origine','S7'=>'Scarico di olio destinato ad altri usi','10'=>'Carico olio lampante da recupero','8'=>'Reso olio confezionato da clienti','9'=>'Olio ha ottenuto certificazione DOP');
 				if ($form['date_ini_Y'].$form['date_ini_M'].$form['date_ini_D']==str_replace("-", "", $mv['datdoc']) AND strlen($mv['status'])>1) {
 				// escludo i movimenti già inseriti null'ultimo file con stessa data
 				} else if ($mv['id_orderman']>0 AND $mv['operat']==-1 AND $mv['cod_operazione']<>"S7"){
-
 						if (strtotime($ult_mov) < strtotime($mv['datdoc'])){
 							if (intval($mv['cod_operazione'])<>3 ){// escludo codice operazione 3
 								$totcont[$mv['recip_stocc']] -= floatval($mv['quanti']);
@@ -311,9 +310,9 @@ if (isset($_POST['preview']) and $msg=='') {
 									$msg .='5+';$er="style='background-color: red';";
 								}
 
-								if (intval($mv['recip_stocc_destin'])>0){// se c'è recipiente stoccaggio destinazione
+								if (strval($mv['recip_stocc_destin'])>0){// se c'è recipiente stoccaggio destinazione
 									$totcont[$mv['recip_stocc_destin']] += $mv['quanti'];
-									echo "<br>PRODUZIONE carico fusto ",$mv['recip_stocc_destin']," di:",$mv['quanti']," totale recipiente:",$totcont[$mv['recip_stocc_destin']];;
+									//echo "<br>PRODUZIONE carico fusto ",$mv['recip_stocc_destin']," di:",$mv['quanti']," totale recipiente:",$totcont[$mv['recip_stocc_destin']];;
 
 									if ($totcont[$mv['recip_stocc_destin']]>$maxcont[$mv['recip_stocc_destin']]){
 										echo "<br>",$mv['desdoc'],"ERRORE >",$nr," totcont:",$totcont[$mv['recip_stocc_destin']]," - maxcont:",$maxcont[$mv['recip_stocc_destin']];

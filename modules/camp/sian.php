@@ -310,7 +310,7 @@ if (isset($_POST['preview']) and $msg=='') {
 									$msg .='5+';$er="style='background-color: red';";
 								}
 
-								if (strval($mv['recip_stocc_destin'])>0){// se c'è recipiente stoccaggio destinazione
+								if (strlen($mv['recip_stocc_destin'])>0){// se c'è recipiente stoccaggio destinazione
 									$totcont[$mv['recip_stocc_destin']] += $mv['quanti'];
 									//echo "<br>PRODUZIONE carico fusto ",$mv['recip_stocc_destin']," di:",$mv['quanti']," totale recipiente:",$totcont[$mv['recip_stocc_destin']];;
 

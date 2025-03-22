@@ -302,11 +302,11 @@ if (isset($_POST['preview']) and $msg=='') {
 
 						if (strtotime($ult_mov) < strtotime($mv['datdoc'])){
 							if (intval($mv['cod_operazione'])<>3 ){// escludo codice operazione 3
-								$totcont[$mv['recip_stocc']] -= $mv['quanti'];
-								//echo "<br>PRODUZIONE SCarico fusto ",$mv['recip_stocc']," di:",$mv['quanti'];
+								$totcont[$mv['recip_stocc']] -= floatval($mv['quanti']);
+								//echo "<br><br>PRODUZIONE SCarico fusto ",floatval($mv['recip_stocc'])," di:",floatval($mv['quanti']);
 
 								if ($totcont[$mv['recip_stocc']]<0){
-									//echo $mv['desdoc'],"ERRORE <",$nr;
+									//echo "<br>",$mv['desdoc'],"ERRORE <",$nr;
 									$message = "Al rigo ".$nr." la giacenza del silos ".$mv['recip_stocc']." è negativa";
 									$msg .='5+';$er="style='background-color: red';";
 								}
@@ -367,6 +367,7 @@ if (isset($_POST['preview']) and $msg=='') {
 						$legenda_cod_op['3']='Vendita/cessione olio a ditta extracomunitaria';
 						$legenda_cod_op['4']='Scarico olio trasferimento altro stabilimento/deposito';
 						$legenda_cod_op['6']='Omaggio olio confezionato';
+            $legenda_cod_op['7']='Scarico altri usi';
 						$legenda_cod_op['8']='Scarico olio autoconsumo';
 						$legenda_cod_op['12']='Perdite, cali, campionamento, analisi';
 						$legenda_cod_op['13']='Separazione morchie';
@@ -412,6 +413,7 @@ if (isset($_POST['preview']) and $msg=='') {
 
 					echo "<td class=\"FacetDataTD\" align=\"center\">".$mv['desdoc']." &nbsp;</td>\n";
 					echo "<td class=\"FacetDataTD\" align=\"center\">".$legenda_cod_op[$mv['cod_operazione']]." &nbsp;</td>\n";
+
 					echo "<td class=\"FacetDataTD\" align=\"center\">".$mv['varieta']." &nbsp;</td>\n";
 					echo "</tr>\n";
 					$ctr_mv = $mv['artico'];

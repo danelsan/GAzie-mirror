@@ -303,7 +303,7 @@ if (isset($_POST['preview']) and $msg=='') {
 						if (strtotime($ult_mov) < strtotime($mv['datdoc'])){
 							if (intval($mv['cod_operazione'])<>3 ){// escludo codice operazione 3
 								$totcont[$mv['recip_stocc']] -= floatval($mv['quanti']);
-								//echo "<br><br>PRODUZIONE SCarico fusto ",floatval($mv['recip_stocc'])," di:",floatval($mv['quanti']);
+								//echo "<br><br>PRODUZIONE SCarico fusto ",$mv['recip_stocc']," di:",$mv['quanti']," totale recipiente:",$totcont[$mv['recip_stocc']]," - datdoc:",$mv['datdoc'];
 
 								if ($totcont[$mv['recip_stocc']]<0){
 									//echo "<br>",$mv['desdoc'],"ERRORE <",$nr;
@@ -313,7 +313,7 @@ if (isset($_POST['preview']) and $msg=='') {
 
 								if (intval($mv['recip_stocc_destin'])>0){// se c'è recipiente stoccaggio destinazione
 									$totcont[$mv['recip_stocc_destin']] += $mv['quanti'];
-									//echo "<br>PRODUZIONE carico fusto ",$mv['recip_stocc_destin']," di:",$mv['quanti'];
+									echo "<br>PRODUZIONE carico fusto ",$mv['recip_stocc_destin']," di:",$mv['quanti']," totale recipiente:",$totcont[$mv['recip_stocc_destin']];;
 
 									if ($totcont[$mv['recip_stocc_destin']]>$maxcont[$mv['recip_stocc_destin']]){
 										echo "<br>",$mv['desdoc'],"ERRORE >",$nr," totcont:",$totcont[$mv['recip_stocc_destin']]," - maxcont:",$maxcont[$mv['recip_stocc_destin']];

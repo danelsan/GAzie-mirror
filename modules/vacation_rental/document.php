@@ -739,25 +739,30 @@ function createDocument($testata, $templateName, $gTables, $rows = 'rigdoc', $de
       require("./lang.english.php");
     }
     $datadir = dirname(__DIR__, 2).'/data/';
-    if (!file_exists($datadir . 'files/' . $IDaz.'/pdf_'.$templateName.'/') && $templateName!=="BookingQuote") {// non per i preventivi
+
+    if (!file_exists($datadir . 'files/' . $IDaz.'/pdf_'.$templateName.'/') && $templateName=="Lease") {// Solo per contratti
         mkdir($datadir . 'files/' . $IDaz.'/pdf_'.$templateName.'/', 0777, true);
+    }
+    if (!file_exists('files/' . $IDaz.'/pdf_'.$templateName.'/') && $templateName=="Lease") {// Per contratto con accesso utente
+        mkdir('files/' . $IDaz.'/pdf_'.$templateName.'/', 0777, true);
     }
     if ((filter_var($dest, FILTER_VALIDATE_EMAIL)|| $dest=="E" ) && file_exists($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf')){// se devo inviare una mail controllo che ci sia il PDF
       $PDFurl = ($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf');
 
-    }elseif (!$save && $templateName!=="BookingQuote"){// se non devo salvare il pdf mostro quello salvato. NON vale per i preventivi che non si devono salvare
+    }elseif (!$save && $templateName=="Lease" ){// se non devo salvare il pdf mostro quello salvato. Vale solo per i contratti Lease
        // The location of the PDF file
       // on the server
       $PDFurl = ($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf');
 
       // Header content type
       header("Content-type: application/pdf");
-      header("Content-Length: " . filesize($PDFurl));
+	  if (file_exists($PDFurl)){
+		header("Content-Length: " . filesize($PDFurl));
 
-      // Send the file to the browser.
-      readfile($PDFurl);
+		// Send the file to the browser.	  
+		readfile($PDFurl);
+	  }
       return;
-
     }
     $access=" ";
     $script_transl = $strScript["admin_booking.php"];
@@ -870,8 +875,9 @@ function createDocument($testata, $templateName, $gTables, $rows = 'rigdoc', $de
     $docVars->azienda['cliente1']=$docVars->cliente1;
     $docVars->azienda['doc_name']=$pdf->tipdoc.'.pdf';
     if ($dest && $dest !== 'H' && $dest !== 'X') { // è stata richiesta una e-mail
-        if ($save){
-           $pdf->Output($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');
+        if ($save && $templateName=="Lease"){
+           $pdf->Output($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');// questo è per GAzie
+           $pdf->Output(dirname(__DIR__).'/vacation_rental/files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');// questo è il pdf per l'utente
         }
         if ($dest!=='E'){// se ho un indirizzo e-mail
           $docVars->client['e_mail']=$dest;// lo impongo per l'invio
@@ -921,11 +927,13 @@ function createDocument($testata, $templateName, $gTables, $rows = 'rigdoc', $de
         $content=$pdf->Output($doc_name, $dest);
         if ($save){
            $pdf->Output($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');
+		   $pdf->Output(dirname(__DIR__).'/vacation_rental/files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');// questo è il pdf per l'utente
         }
         return ($content);
     } else { // va all'interno del browser
       if ($save){
          $pdf->Output($datadir . 'files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');
+		 $pdf->Output(dirname(__DIR__).'/vacation_rental/files/' . $IDaz .'/pdf_'.$templateName.'/'.$testata['id_tes'].'.pdf','F');// questo è il pdf per l'utente
       }
       if ($testata['tipdoc']=='AOR'){
         /* in caso di ordine a fornitore che non viene inviato via mail al fornitore ma solo al browser

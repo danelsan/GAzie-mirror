@@ -704,7 +704,7 @@ $(function() {
             url: './'+url+'&save=true',
             dataType: 'text',
             beforeSend:function(){
-               return confirm("Sei sicuro? Il contratto che crei non è firmato dal cliente!");
+               return confirm("Sei sicuro di voler generare il contratto? Il cliente ha firmato?");
             },
 						success: function(output){
 		                    //alert(output);
@@ -1585,9 +1585,6 @@ $ts->output_navbar();
                       mostra_documenti_associati( $r['id_tes'], $paid );
                   }
                   ?>
-                  <a title="Genera pdf prenotazione" class="btn btn-xs dialog_bookcr" ref="<?php echo $r['id_tes']; ?>"  nome="<?php echo $r['ragso1']; ?>" url=<?php echo "stampa_ordcli.php?id_tes=" . $r['id_tes']; ?>>
-                    <i class="glyphicon glyphicon-repeat"></i>
-                  </a>
                   <a style="float:right;" title="Genera pdf contratto" class="btn btn-xs dialog_leasecr" ref="<?php echo $r['id_tes']; ?>" nome="<?php echo $r['ragso1']; ?>" url=<?php echo "stampa_contratto.php?id_tes=". $r['id_tes'] . "&id_ag=". $r['id_agent']; ?>>
                     <i class="glyphicon glyphicon-refresh"></i>
                   </a>

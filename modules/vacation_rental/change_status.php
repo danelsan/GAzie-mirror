@@ -213,7 +213,7 @@ if (isset($_POST['type'])&&isset($_POST['ref'])) {
         if ((!isset($old_checked_out_date) || intval($old_checked_out_date)==0) && $_POST['new_status']=="OUT" && floatval($pointeuro)>0){// se è abilitato attribuisco i punti al checkout
           $amount=get_totalprice_booking($i,FALSE,FALSE,"",TRUE);
           $points=intval($amount/$pointeuro);
-          if ($data = json_decode($anagra['custom_field'],true)){// se c'è un json in anagra
+          if (isset($anagra['custom_field']) && $data = json_decode($anagra['custom_field'],true)){// se c'è un json in anagra
             if (is_array($data['vacation_rental'])){ // se c'è il modulo "vacation rental" nel custom field lo aggiorno
               if (isset($data['vacation_rental']['points'])){// se ci sono già punti accumulati
                 if (intval($points_expiry)>0){// se i punti hanno una scadenza

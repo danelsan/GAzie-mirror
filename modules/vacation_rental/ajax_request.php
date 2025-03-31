@@ -110,10 +110,7 @@ if (isset($_GET['term'])) {
         echo "\nRegistrazione terminata";
       break;
       case 'point_mov':
-        // Antonio Germani prendo i dati IMAP utente, se ci sono
-
         $ret=array();
-
         if (isset($_GET['ref'])){
           $id_anagra= $_GET['ref'];
           $query = "SELECT * FROM " . $gTables['rental_points_mov'] . " WHERE id_anagra ='". intval($id_anagra) ."' ORDER BY timestamp ASC";
@@ -121,10 +118,10 @@ if (isset($_GET['term'])) {
           while ($r = gaz_dbi_fetch_array($result)){// li ciclo e, da rental events prendo il title
             $r['timestamp']=date( 'd-m-Y', strtotime( $r['timestamp'] ) );
             $query = "SELECT * FROM " . $gTables['rental_events'] . " WHERE id_tesbro ='". intval($r['id_tesbro']) ."' AND type = 'ALLOGGIO' ORDER BY end ASC";
-            $res_ev = gaz_dbi_query($query);// prendo tutti gli alloggi
+            $res_ev = gaz_dbi_query($query);// prendo tutti gli alloggi con lo stesso id_tesbro
             $r['title']="";
-            while ($rev = gaz_dbi_fetch_array($res_ev)){// li ciclo e, dopo controllo, li registro
-            $r['title'].=$rev['title']." ";
+            while ($rev = gaz_dbi_fetch_array($res_ev)){// li ciclo e creo un title unico
+              $r['title'].=$rev['title']." ";
             }
 
             $ret[]=$r;

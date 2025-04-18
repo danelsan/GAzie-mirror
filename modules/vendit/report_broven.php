@@ -406,9 +406,9 @@ $ts->output_navbar();
         $result = gaz_dbi_dyn_query(cols_from($gTables['tesbro'], "*") . ", " .
 			  cols_from($gTables['anagra'],"ragso1","e_mail AS base_mail") . ", " .cols_from($gTables["destina"], "unita_locale1"),$tesbro_e_destina,$ts->where,$ts->orderby,$ts->getOffset(),$ts->getLimit());
         $ctrlprotoc = "";
-        $totimpbro_da_evadere = 0;
-        $totimpdoc_evaso = 0;
         while ($r = gaz_dbi_fetch_array($result)) {
+          $totimpbro_da_evadere = 0;
+          $totimpdoc_evaso = 0;
           $remains_atleastone = false; // Almeno un rigo e' rimasto da evadere.
           $processed_atleastone = false; // Almeno un rigo e' gia' stato evaso.
           $rigbro_result = gaz_dbi_dyn_query('*', $gTables['rigbro'], "id_tes = " . $r['id_tes'] . " AND tiprig <=1 ", 'id_tes DESC');

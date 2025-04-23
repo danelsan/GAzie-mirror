@@ -52,7 +52,7 @@ function mostra_documenti_associati($ordine) {
             echo "<a class=\"btn btn-xs btn-default\" title=\"visualizza la fattura immediata\" href=\"stampa_docven.php?id_tes=" . $tesdoc_r['id_tes'] . "\">";
             echo "fatt. " . $tesdoc_r["numfat"];
             echo "</a> ";
-        } elseif ($tesdoc_r["tipdoc"] == "DDT" || ($tesdoc_r["tipdoc"] == "FAD" && $tesdoc_r["ddt_type"]!='R')) {
+        } elseif (substr($tesdoc_r["tipdoc"],0,2) == "DD" || ($tesdoc_r["tipdoc"] == "FAD" && $tesdoc_r["ddt_type"]!='R')) {
             // documento di trasporto
             echo "<a class=\"btn btn-xs btn-default\" title=\"visualizza il documento di trasporto\" href=\"stampa_docven.php?id_tes=" . $tesdoc_r['id_tes'] . "&template=DDT\">";
             echo "ddt " . $tesdoc_r["numdoc"];

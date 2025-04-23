@@ -1892,7 +1892,7 @@ class GAzieForm {
       }
     }
 
-    function selectFromDB($table, $name, $key, $val, $order = false, $empty = false, $bridge = '', $key2 = '', $val_hiddenReq = '', $class = 'FacetSelect', $addOption = null, $style = '', $where = false, $echo=false, $bridge2 = '', $key3 = '', $sort='',$id='') {
+    function selectFromDB($table, $name, $key, $val, $order = false, $empty = false, $bridge = '', $key2 = '', $val_hiddenReq = '', $class = 'FacetSelect', $addOption = null, $style = '', $where = false, $echo=false, $bridge2 = '', $key3 = '', $sort='',$id='', $required='') {
         global $gTables;
         $acc='';
         $id=($id=='')?$name:$id;
@@ -1908,9 +1908,9 @@ class GAzieForm {
         if (!empty($val_hiddenReq)) {
             $refresh = "onchange=\"this.form.hidden_req.value='$val_hiddenReq'; this.form.submit();\"";
         }
-        $acc .= "\t <select id=\"$id\" name=\"$name\" class=\"$class\" $refresh $style>\n";
+        $acc .= "\t <select id=\"$id\" name=\"$name\" class=\"$class\" $refresh $style $required>\n";
         if ($empty) {
-            $acc .= "\t\t <option value=\"\"></option>\n";
+            $acc .= "\t\t <option value=\"\" ></option>\n";
         }
         $result = gaz_dbi_query($query);
         while ($r = gaz_dbi_fetch_array($result)) {

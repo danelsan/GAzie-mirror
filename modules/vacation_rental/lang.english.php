@@ -893,7 +893,8 @@ $strScript = array(
     'refund' => 'Refund',
     'points' => 'Points',
     'missing' => 'Missing',
-    'next_level' => 'for the next level'
+    'next_level' => 'for the next level',
+    'detail_points' => 'Points detail'
     ),
 
   "admin_extra.php" =>

@@ -660,7 +660,8 @@ $strScript = array(
 	'refund' => 'Reembolso',
   'points' => 'Puntos',
   'missing' => 'Faltan',
-  'next_level' => 'para el siguiente nivel'
+  'next_level' => 'para el siguiente nivel',
+  'detail_points' => 'Detalle de puntos'
     ),
 
   "admin_extra.php" =>

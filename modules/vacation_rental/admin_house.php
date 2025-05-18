@@ -162,7 +162,7 @@ if (isset($_POST['Insert']) || isset($_POST['Update'])) {   //se non e' il primo
   $form['deposit_type'] = $_POST['deposit_type'];
   $form['self_checkin'] = $_POST['self_checkin'];
   $form['agent'] = $_POST['agent'];
-  $form['id_polstat'] = $_POST['is_polstat'];
+  $form['id_polstat'] = $_POST['id_polstat'];
   $form['tur_tax_mode'] = $_POST['tur_tax_mode'];
   $form['tur_tax']= $_POST['tur_tax'];
   /** inizio modifica FP 03/12/2015

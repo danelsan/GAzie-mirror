@@ -249,6 +249,7 @@ if (isset($_GET['XML']) and $msg == "") {
     $datastr = json_decode($rowcustom['custom_field'], true);
     $total_guests += intval($datastr['vacation_rental']['total_guests']);
     $room_qta += intval($datastr['vacation_rental']['room_qta']);// totale camere struttura
+    $id_polstat = (isset($datastr['vacation_rental']['id_polstat']))?$datastr['vacation_rental']['id_polstat']:'';
   }
   $camere_occupate_struttura=$sum['camere_occupate_struttura'];
 
@@ -268,8 +269,13 @@ if (isset($_GET['XML']) and $msg == "") {
   $xml_output .= "\t\t</struttura>\n";
   $xml_output .= "\t\t<arrivi>\n";
 
-  while ($row = gaz_dbi_fetch_array($result)){
+  $file_polstat=array(); // inizializzo la matrice che comporrà il file per la Polizia di Stato. Ogni elemento sarà una riga/alloggiato
 
+  while ($row = gaz_dbi_fetch_array($result)){
+    $date1 = new DateTime($row['start']);
+    $date2 = new DateTime($row['end']);
+    $diff = $date1->diff($date2);
+    $nights = $diff->days;
     // carico il json del pre-checkin
     $DownloadDir = __DIR__.DIRECTORY_SEPARATOR.'self_checkin'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.$row['id_tesbro'].'/data.json';
     if ($json_string = @file_get_contents($DownloadDir)){
@@ -281,6 +287,8 @@ if (isset($_GET['XML']) and $msg == "") {
     $n=0;
 
     foreach($dati as $guest){// per ogni ospite presente nel file del pre checkin
+      $file_polstat[$n]='';
+      $sex=($guest['sex']='F')?2:1;
       $idswh=(string)(intval($row['id_tesbro'])).$n;
       $xml_output .= "\t\t\t<arrivo>\n";
       $xml_output .= "\t\t\t\t<idswh>".$idswh."</idswh>\n";
@@ -293,10 +301,23 @@ if (isset($_GET['XML']) and $msg == "") {
       }else{
         $tipoalloggiato='16';// single
       }
+
+      $file_polstat[$n].=str_pad($tipoalloggiato, 2);
+      $file_polstat[$n].=str_pad(date("Ymd",$utsini), 10);
+      $file_polstat[$n].=str_pad($nights, 2);
+      $file_polstat[$n].=str_pad($guest['cognome'], 50);// cognome
+      $file_polstat[$n].=str_pad($guest['nome'], 30);// nome
+      $file_polstat[$n].=str_pad($sex, 1);
+      $file_polstat[$n].=str_pad((new DateTime($guest['datnas']))->format('d/m/Y'), 10);// data nascita
+
       if ($guest['coucard']<>"IT"){
         $cittadinanza="100000".gaz_dbi_get_row($gTables['country'], 'iso', $guest['coucard'])['istat_country'];
+        $luogorilascidoc="";
       }else{
         $cittadinanza="100000100";// Italia
+        $municip=gaz_dbi_get_row($gTables['municipalities'], 'name', $guest['loccard']);
+        $provin=gaz_dbi_get_row($gTables['provinces'], 'id', $municip['id_province']);
+        $luogorilascidoc="4".str_pad($provin['id_region'], 2, "0", STR_PAD_LEFT).$municip['stat_code'];
       }
       if ($guest['country']<>"IT"){
         $statoresidenza="100000".gaz_dbi_get_row($gTables['country'], 'iso', $guest['country'])['istat_country'];
@@ -317,12 +338,26 @@ if (isset($_GET['XML']) and $msg == "") {
         $provin=gaz_dbi_get_row($gTables['provinces'], 'id', $municip['id_province']);
         $comunenascita="4".str_pad($provin['id_region'], 2, "0", STR_PAD_LEFT).$municip['stat_code'];
       }
+
+      $file_polstat[$n].=str_pad($comunenascita, 9);
+      $file_polstat[$n].=str_pad($guest['pronas'], 2);
+      $file_polstat[$n].=str_pad($statonascita, 9);// stato di nascita
+      $file_polstat[$n].=str_pad($cittadinanza, 9);// stato cittadinanza
+
       $xml_output .= "\t\t\t\t<tipoalloggiato>".$tipoalloggiato."</tipoalloggiato>\n";
       if ($n==0){// è il capogruppo
         $idcapo=$idswh;
         $xml_output .= "\t\t\t\t<idcapo></idcapo>\n";
+
+        $file_polstat[$n].=str_pad($guest['tipdoc'], 5);
+        $file_polstat[$n].=str_pad($guest['numdoc'], 20);
+        $file_polstat[$n].=str_pad($luogorilascidoc, 9);// Luogo di rilascio documento
+
       }else{
         $xml_output .= "\t\t\t\t<idcapo>".$idcapo."</idcapo>\n";
+
+        $file_polstat[$n].=str_pad(' ', 34);// riempimento vuoto per i membri o familiari
+
       }
       $xml_output .= "\t\t\t\t<cognome>".$guest['cognome']."</cognome>\n";
       $xml_output .= "\t\t\t\t<nome>".$guest['nome']."</nome>\n";
@@ -336,9 +371,15 @@ if (isset($_GET['XML']) and $msg == "") {
       $xml_output .= "\t\t\t\t<tipoturismo>Non specificato</tipoturismo>\n";
       $xml_output .= "\t\t\t\t<mezzotrasporto>Non specificato</mezzotrasporto>\n";
       $xml_output .= "\t\t\t</arrivo>\n";
+
+      if (strlen($id_polstat)>0){// se l'alloggio dispone di identificativo polstat lo aggiungo
+        $file_polstat[$n].=str_pad($id_polstat, 6);// id appartamento polstat
+      }
+
      $n++;
     }
   }
+
 
   $xml_output .= "\t\t</arrivi>\n";
   $xml_output .= "\t</movimento>\n";
@@ -358,12 +399,16 @@ if (isset($_GET['XML']) and $msg == "") {
   $xmlFileP = $path."/".$timestamp.".xml";
   $xmlHandle = fopen($xmlFileP, "w");
 
-	if (@fwrite($xmlHandle, $xml_output) === false){
+  // creo e scrivo il file polstat
+  $contenuto = implode("\r\n", $file_polstat);// Unisci con "\r\n" senza aggiungerlo alla fine
+  file_put_contents($path."/polstat.txt", $contenuto);// Scrivi il file
+
+	if (@fwrite($xmlHandle, $xml_output) === false || @file_put_contents($path."/polstat.txt", $contenuto) === false){
     ?>
     <div class="panel panel-default gaz-table-form div-bordered" style="max-width:80%;">
         <div class="container-fluid">
           <div align="center" class="FacetFormHeaderFont">
-            <p class="text-danger">ERRORE nella generazione del file</p>
+            <p class="text-danger">ERRORE nella generazione dei files</p>
           </div>
         </div>
     </div>
@@ -373,26 +418,39 @@ if (isset($_GET['XML']) and $msg == "") {
     <div class="panel panel-default gaz-table-form div-bordered" style="max-width:80%;">
         <div class="container-fluid">
           <div align="center" class="FacetFormHeaderFont">
-            <p class="text-success">Il file è stato generato correttamente"</p>
+            <p class="text-success">I file statistico e alloggiati Polizia sono stati generati correttamente</p>
             <!-- Pulsante di download -->
-            <button id="downloadBtn">Scarica File</button>
+            <button id="downloadBtn">Scarica File XML e TXT</button>
 
             <script>
-              // Percorso del file da scaricare
-              const filePath = '<?php echo $xmlFileP; ?>';
+              // Percorsi dei file da scaricare
+              const xmlFilePath = '<?php echo $xmlFileP; ?>';
+              const txtFilePath = '<?php echo $path,"/polstat.txt"; ?>';
 
               document.getElementById('downloadBtn').addEventListener('click', () => {
-                // Crea dinamicamente un elemento <a>
-                const link = document.createElement('a');
-                link.href = filePath;
-                // Attributo download suggerisce al browser di scaricare invece che aprire
-                link.download = filePath.split('/').pop();
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Crea un link per il file XML
+                const xmlLink = document.createElement('a');
+                xmlLink.href = xmlFilePath;
+                xmlLink.download = xmlFilePath.split('/').pop(); // Estrae il nome del file
+
+                // Crea un link per il file TXT
+                const txtLink = document.createElement('a');
+                txtLink.href = txtFilePath;
+                txtLink.download = txtFilePath.split('/').pop(); // Estrae il nome del file
+
+                // Aggiungi i link al DOM e simula il click
+                document.body.appendChild(xmlLink);
+                xmlLink.click();
+                document.body.removeChild(xmlLink); // Rimuovi il link dopo il clic
+
+                // Aggiungi il link per il file TXT al DOM e simula il click
+                document.body.appendChild(txtLink);
+                txtLink.click();
+                document.body.removeChild(txtLink); // Rimuovi il link dopo il clic
               });
             </script>
           </div>
+
         </div>
     </div>
     <?php

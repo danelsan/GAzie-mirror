@@ -139,15 +139,21 @@ if ($result->num_rows >0) {
   $pdf->Ln(5);
 } else {
 	// Antonio Germani - Stampa operai
-	$query="SELECT * FROM ".$gTables['staff_worked_hours']. " WHERE id_orderman =". intval($_GET['id_orderman']);
+	$query="SELECT id_staff FROM ".$gTables['staff_worked_hours']. " WHERE id_orderman = ". intval($_GET['id_orderman'])." GROUP BY id_staff";
 	$resoper = gaz_dbi_query($query);
-	if ($resoper->num_rows >0) {
-
-		$pdf->Cell(30, 4, 'ELENCO ADDETTI:',1, 0, 'C', 0, '', 0);
+	if ($resoper->num_rows > 0 ) {
+		$pdf->Cell(39.5, 4, 'ELENCO ADDETTI:',1,1,'C',1,'',0);
+    $nr=0;
 		while($row = $resoper->fetch_assoc()){
+      $nr++;
 			$resstaff = gaz_dbi_get_row($gTables['staff'], "id_staff", $row['id_staff']);
 			$resnome = gaz_dbi_get_row($gTables['clfoco'], "codice", $resstaff['id_clfoco']);
-			$pdf->Cell(50, 4, $resnome['descri'],1, 0, 'C', 0, '', 0);
+      $carry=0;
+      if ( $nr > 6 ) {
+        $carry = 1;
+        $nr=0;
+      }
+			$pdf->Cell(39.5, 4, $resnome['descri'],1,$carry,'C', 0, '', 1);
 		}
 	}
 	$pdf->Cell(0,0,'',0,1);$pdf->Cell(0,0,'',0,1);

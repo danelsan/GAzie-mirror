@@ -67,6 +67,7 @@ $rescamp = ($rescamp)?$rescamp:array('descri'=>'');
 
 $pdf = new Report_template('L','mm','A4',true,'UTF-8',false,true);
 $pdf->setVars($admin_aziend,$title);
+$pdf->SetFooterMargin(15);
 $pdf->setRiporti('');
 $pdf->AddPage();
 $pdf->SetFillColor(hexdec(substr($admin_aziend['colore'], 0, 2)), hexdec(substr($admin_aziend['colore'], 2, 2)), hexdec(substr($admin_aziend['colore'], 4, 2)));

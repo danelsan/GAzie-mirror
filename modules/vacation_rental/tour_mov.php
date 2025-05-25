@@ -1,5 +1,11 @@
 <?php
 /*
+  --------------------------------------------------------------------------
+  GAzie - MODULO 'VACATION RENTAL'
+  Copyright (C) 2025-present - Antonio Germani, Massignano (AP)
+  (https://www.programmisitiweb.lacasettabio.it)
+
+  --------------------------------------------------------------------------
  --------------------------------------------------------------------------
                             GAzie - Gestione Azienda
     Copyright (C) 2004-2023 - Antonio De Vincentiis Montesilvano (PE)

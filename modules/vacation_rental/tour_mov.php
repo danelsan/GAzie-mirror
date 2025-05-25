@@ -28,6 +28,30 @@ $admin_aziend=checkAdmin();
 $msg = "";
 $path = "files/".$admin_aziend['company_id']."/mov_turistiche";
 
+function camere_occupate($day) {// Calcolo le camere occupate per un dato giorno
+  global $gTables;
+  $day = substr($day, 0, 10); // Assicura formato YYYY-MM-DD
+
+  $select = "SUM(JSON_EXTRACT(".$gTables['artico'].".custom_field, '$.vacation_rental.room_qta')) AS camere_occupate_struttura";
+
+  $tabella = $gTables['rental_events']."
+      LEFT JOIN ".$gTables['artico']."
+      ON ".$gTables['rental_events'].".house_code = ".$gTables['artico'].".codice";
+
+  $where =
+      "'".$day."' >= DATE(".$gTables['rental_events'].".checked_in_date)
+      AND '".$day."' < ".$gTables['rental_events'].".end
+      AND ".$gTables['rental_events'].".type = 'ALLOGGIO'
+      AND ".$gTables['artico'].".id_artico_group = ".intval($_GET['XML'])."
+      AND JSON_EXTRACT(".$gTables['artico'].".custom_field, '$.vacation_rental.room_qta') IS NOT NULL";
+
+  $res_sum = gaz_dbi_dyn_query($select, $tabella, $where);
+  $sum = gaz_dbi_fetch_assoc($res_sum) ?: [];
+  $sum['camere_occupate_struttura'] = isset($sum['camere_occupate_struttura']) && $sum['camere_occupate_struttura'] !== null ? $sum['camere_occupate_struttura']  : 0;
+
+  return $sum;
+}
+
 if(isset($_GET['Return'])){
   header("Location: ../../modules/vacation_rental/report_booking.php");
   exit;
@@ -64,6 +88,7 @@ require("../../library/include/header.php");
 $script_transl = HeadMain();
 echo "<form method=\"GET\">\n";
 echo "<div align=\"center\" class=\"FacetFormHeaderFont\">Creazione file xml per la trasmissione telematica della movimentazione turistica</div>\n";
+
 echo "<table class=\"Tmiddle table-striped\" align=\"center\">\n";
 if (!empty($msg)) {
     $message = "";
@@ -221,15 +246,12 @@ if (isset($_GET['anteprima']) and $msg == "") {
        </div>
 <?php
 }
+
 if (isset($_GET['XML']) and $msg == "") {
 
-  // Calcolo le camere occupate
-    $select = "SUM(JSON_EXTRACT(".$gTables['artico'].".custom_field, '$.vacation_rental.room_qta')) AS camere_occupate_struttura";
-    $tabella = $gTables['rental_events']." LEFT JOIN ".$gTables['artico']." ON ".$gTables['rental_events'].".house_code = ".$gTables['artico'].".codice";
-   $where = $gTables['rental_events'].".type = 'ALLOGGIO' AND ".$gTables['rental_events'].".checked_in_date BETWEEN '".$datainizio." 00:00:00' AND '".$datainizio." 23:59:59' AND ".$gTables['artico'].".id_artico_group = ".intval($_GET['XML'])." AND JSON_EXTRACT(".$gTables['artico'].".custom_field, '$.vacation_rental.room_qta') IS NOT NULL";
-   // nella SUM ho il totale delle camere occupate nella struttura per il dato giorno di check-in
-  $res_sum = gaz_dbi_dyn_query($select, $tabella, $where);
-  $sum=gaz_dbi_fetch_assoc($res_sum);
+  // Calcolo le camere occupate nella struttura per il dato giorno di check-in
+   $camere_occupate_struttura = camere_occupate($datainizio)['camere_occupate_struttura'];
+
 
   // prendo i movimenti check-in da registrare
   $select = $gTables['rental_events'].".*,".$gTables['artico'].".custom_field AS art_custom,".$gTables['artico'].".id_artico_group , ".$gTables['artico_group'].".descri, JSON_EXTRACT(".$gTables['artico_group'].".custom_field, '$.vacation_rental.csmt') AS csmt, ".$gTables['anagra'].".ragso1, ".$gTables['anagra'].".ragso2, JSON_EXTRACT(".$gTables['tesbro'].".custom_field, '$.vacation_rental.self_checkin_status') AS self_checkin_status, JSON_EXTRACT(".$gTables['tesbro'].".custom_field, '$.vacation_rental.pre_checkin_status') AS pre_checkin_status";
@@ -251,16 +273,15 @@ if (isset($_GET['XML']) and $msg == "") {
     $room_qta += intval($datastr['vacation_rental']['room_qta']);// totale camere struttura
     $id_polstat = (isset($datastr['vacation_rental']['id_polstat']))?$datastr['vacation_rental']['id_polstat']:'';
   }
-  $camere_occupate_struttura=$sum['camere_occupate_struttura'];
+
 
   // creo il file xml
-	$xml_output = '<?xml version="1.0" encoding="UTF-8"?>/n
-	<!-- GAzieDocuments AppVersion="1" Creator="Antonio Germani Copyright" CreatorUrl="https://www.programmisitiweb.lacasettabio.it" -->';
+	$xml_output = '<?xml version="1.0" encoding="UTF-8"?><!-- GAzieDocuments AppVersion="1" Creator="Antonio Germani Copyright" CreatorUrl="https://www.programmisitiweb.lacasettabio.it" -->';
 	$xml_output .= "\n<movimenti>\n";
   $xml_output .= "\t<codice>".$csmt."</codice>\n";
   $xml_output .= "\t<prodotto>"."GAzie Vacation rental"."</prodotto>\n";
   $xml_output .= "\t<movimento>\n";
-  $xml_output .= "\t\t<data>".date("Ymd",$utsini)."</data>\n";
+  $xml_output .= "\t\t<data>".date("Ymd",$utsini)."</data>\n";// data dell'effettivo check-in
   $xml_output .= "\t\t<struttura>\n";
   $xml_output .= "\t\t\t<apertura>SI</apertura>\n";
   $xml_output .= "\t\t\t<camereoccupate>".$camere_occupate_struttura."</camereoccupate>\n";// effettivamente occupate
@@ -270,9 +291,15 @@ if (isset($_GET['XML']) and $msg == "") {
   $xml_output .= "\t\t<arrivi>\n";
 
   $file_polstat=array(); // inizializzo la matrice che comporrà il file per la Polizia di Stato. Ogni elemento sarà una riga/alloggiato
-
-  while ($row = gaz_dbi_fetch_array($result)){
-    $date1 = new DateTime($row['start']);
+  $check_outs=array();
+  $nguest=0;
+  $maxend=0;
+  while ($row = gaz_dbi_fetch_array($result)){// CICLO LE PRENOTAZIONI:  per ogni prenotazione
+    if (strtotime($row['end']) > strtotime($maxend)){
+      $maxend=$row['end'];
+    }
+    //$date1 = new DateTime($row['start']);
+    $date1 = new DateTime($datainizio);// devo usare la data dell'effettivo check-in perché potrebbe non essere stato eseguito come da prenotazione
     $date2 = new DateTime($row['end']);
     $diff = $date1->diff($date2);
     $nights = $diff->days;
@@ -287,6 +314,7 @@ if (isset($_GET['XML']) and $msg == "") {
     $n=0;
 
     foreach($dati as $guest){// per ogni ospite presente nel file del pre checkin
+
       $file_polstat[$n]='';
       $sex=($guest['sex']='F')?2:1;
       $idswh=(string)(intval($row['id_tesbro'])).$n;
@@ -301,9 +329,16 @@ if (isset($_GET['XML']) and $msg == "") {
       }else{
         $tipoalloggiato='16';// single
       }
+      // in $check_outs mi prendo gli elementi per registrare poi le partenze check-out
+      $check_outs[$row['end']][$nguest]['idswh']=$idswh;
+      $check_outs[$row['end']][$nguest]['tipoalloggiato']=$tipoalloggiato;
+      $check_outs[$row['end']][$nguest]['arrivo']=$datainizio;
+
+      $guest['cognome'] = preg_replace('/[^A-Za-z\'\-\s]/', '', $guest['cognome']);
+      $guest['nome'] = preg_replace('/[^A-Za-z\'\-\s]/', '', $guest['nome']);
 
       $file_polstat[$n].=str_pad($tipoalloggiato, 2);
-      $file_polstat[$n].=str_pad(date("Ymd",$utsini), 10);
+      $file_polstat[$n].=str_pad(date("d/m/Y",$utsini), 10);
       $file_polstat[$n].=str_pad($nights, 2);
       $file_polstat[$n].=str_pad($guest['cognome'], 50);// cognome
       $file_polstat[$n].=str_pad($guest['nome'], 30);// nome
@@ -312,7 +347,7 @@ if (isset($_GET['XML']) and $msg == "") {
 
       if ($guest['coucard']<>"IT"){
         $cittadinanza="100000".gaz_dbi_get_row($gTables['country'], 'iso', $guest['coucard'])['istat_country'];
-        $luogorilascidoc="";
+        $luogorilascidoc=$cittadinanza;
       }else{
         $cittadinanza="100000100";// Italia
         $municip=gaz_dbi_get_row($gTables['municipalities'], 'name', $guest['loccard']);
@@ -365,25 +400,83 @@ if (isset($_GET['XML']) and $msg == "") {
       $xml_output .= "\t\t\t\t<cittadinanza>".$cittadinanza."</cittadinanza>\n";
       $xml_output .= "\t\t\t\t<statoresidenza>".$statoresidenza."</statoresidenza>\n";
       $xml_output .= "\t\t\t\t<luogoresidenza>".$luogoresidenza."</luogoresidenza>\n";
-      $xml_output .= "\t\t\t\t<datanascita>".$guest['datnas']."</datanascita>\n";
+      $xml_output .= "\t\t\t\t<datanascita>" . (new DateTime($guest['datnas']))->format('Ymd') . "</datanascita>\n";
       $xml_output .= "\t\t\t\t<statonascita>".$statonascita."</statonascita>\n";
       $xml_output .= "\t\t\t\t<comunenascita>".$comunenascita."</comunenascita>\n";
       $xml_output .= "\t\t\t\t<tipoturismo>Non specificato</tipoturismo>\n";
       $xml_output .= "\t\t\t\t<mezzotrasporto>Non specificato</mezzotrasporto>\n";
       $xml_output .= "\t\t\t</arrivo>\n";
-
-      if (strlen($id_polstat)>0){// se l'alloggio dispone di identificativo polstat lo aggiungo
+      $fileUnico=0;
+      if (strlen($id_polstat)>0){// FILE UNICO: se l'alloggio dispone di identificativo polstat lo aggiungo
         $file_polstat[$n].=str_pad($id_polstat, 6);// id appartamento polstat
+        $fileUnico=1;
       }
 
      $n++;
+     $nguest++;
     }
-  }
 
+  }
 
   $xml_output .= "\t\t</arrivi>\n";
   $xml_output .= "\t</movimento>\n";
+
+  //Adesso creo i movimenti per le partenze
+$exclude=array();
+foreach ($check_outs as $data => $alloggiati) {
+  $exclude[] = $data;
+  $camere_occupate_struttura = camere_occupate($data)['camere_occupate_struttura'];
+
+  $xml_output .= "\t<movimento>\n";
+  $xml_output .= "\t\t<data>". (new DateTime($data))->format('Ymd') ."</data>\n";// data dell'effettivo check-in
+  $xml_output .= "\t\t<struttura>\n";
+  $xml_output .= "\t\t\t<apertura>SI</apertura>\n";
+  $xml_output .= "\t\t\t<camereoccupate>".$camere_occupate_struttura."</camereoccupate>\n";// effettivamente occupate
+  $xml_output .= "\t\t\t<cameredisponibili>".$room_qta."</cameredisponibili>\n";// potenzialmente disponibili
+  $xml_output .= "\t\t\t<lettidisponibili>".$total_guests."</lettidisponibili>\n";// persone potenzialmente ospitabili
+  $xml_output .= "\t\t</struttura>\n";
+  $xml_output .= "\t\t<partenze>\n";
+
+  foreach ($alloggiati as $persona) {
+    $xml_output .= "\t\t\t<partenza>\n";
+    $xml_output .= "\t\t\t\t<idswh>".$persona['idswh']."</idswh>\n";
+    $xml_output .= "\t\t\t\t<tipoalloggiato>".$persona['tipoalloggiato']."</tipoalloggiato>\n";
+    $xml_output .= "\t\t\t\t<arrivo>".(new DateTime($persona['arrivo']))->format('Ymd')."</arrivo>\n";
+    $xml_output .= "\t\t\t</partenza>\n";
+  }
+
+  $xml_output .= "\t\t</partenze>\n";
+  $xml_output .= "\t</movimento>\n";
+
+}
+
+// qui devo creare i movimenti per la struttura per ogni giorno di permanenza
+// Escludo gli estremi che vanno gestiti con movimento di arrivo e partenza
+$date2 = new DateTime($maxend);
+$date1->modify('+1 day');
+$interval = new DateInterval('P1D');
+$periodo = new DatePeriod($date1, $interval, $date2); // fine già corretta
+foreach ($periodo as $date) {
+  if (in_array($date->format('Y-m-d'), $exclude)) {
+      continue; // salto la data se è nella lista delle escluse perché c'è stato un check-out
+  }
+  //DEVO RICALCOLARE LE CAMERE OCCUPATE GIORNO PER GIORNO
+  $camere_occupate_struttura = camere_occupate($date->format('Y-m-d'))['camere_occupate_struttura'];
+
+  $xml_output .= "\t<movimento>\n";
+  $xml_output .= "\t\t<data>". $date->format('Ymd') ."</data>\n";// data dell'effettivo check-in
+  $xml_output .= "\t\t<struttura>\n";
+  $xml_output .= "\t\t\t<apertura>SI</apertura>\n";
+  $xml_output .= "\t\t\t<camereoccupate>".$camere_occupate_struttura."</camereoccupate>\n";// effettivamente occupate
+  $xml_output .= "\t\t\t<cameredisponibili>".$room_qta."</cameredisponibili>\n";// potenzialmente disponibili
+  $xml_output .= "\t\t\t<lettidisponibili>".$total_guests."</lettidisponibili>\n";// persone potenzialmente ospitabili
+  $xml_output .= "\t\t</struttura>\n";
+  $xml_output .= "\t</movimento>\n";
+}
   $xml_output .="</movimenti>\n";
+
+  //echo "<br>📄 Corpo xml:\n" . htmlspecialchars($xml_output) . "<br>";
+
   $path .="/".$id_artico_group;
 
   // Controlla se la cartelle per scrivere i files esistono
@@ -401,7 +494,6 @@ if (isset($_GET['XML']) and $msg == "") {
 
   // creo e scrivo il file polstat
   $contenuto = implode("\r\n", $file_polstat);// Unisci con "\r\n" senza aggiungerlo alla fine
-  file_put_contents($path."/polstat.txt", $contenuto);// Scrivi il file
 
 	if (@fwrite($xmlHandle, $xml_output) === false || @file_put_contents($path."/polstat.txt", $contenuto) === false){
     ?>
@@ -420,7 +512,19 @@ if (isset($_GET['XML']) and $msg == "") {
           <div align="center" class="FacetFormHeaderFont">
             <p class="text-success">I file statistico e alloggiati Polizia sono stati generati correttamente</p>
             <!-- Pulsante di download -->
-            <button id="downloadBtn">Scarica File XML e TXT</button>
+            <button id="downloadBtn" type="button">Scarica File XML e TXT</button>
+
+            <!-- Pulsanti per aprire l'iframe -->
+            <button class="openIframeBtn" data-url="API_istat.php?ref=<?php echo $xmlFileP ; ?>&id=<?php echo $id_artico_group; ?>" type="button">Invio a servizio ISTAT</button>
+            <button class="openIframeBtn" data-url="API_Polizia.php?ref=<?php echo $path; ?>&id=<?php echo $id_artico_group; ?>&type=<?php echo $fileUnico; ?>" type="button">Invio a Alloggiati Polizia</button>
+
+            <!-- Contenitore iframe -->
+            <div id="iframeContainer" style="display: none; position: fixed; top: 10%; left: 5%; width: 90%; height: 80%; background: #fff; z-index: 2000; border: 2px solid #28a745; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
+              <div style="text-align: right; padding: 10px;">
+                <button id="closeIframeBtn" type="button" style="font-size: 18px;">&times;</button>
+              </div>
+              <iframe id="myIframe" src="" style="width: 100%; height: calc(100% - 40px); border: none;"></iframe>
+            </div>
 
             <script>
               // Percorsi dei file da scaricare
@@ -448,6 +552,24 @@ if (isset($_GET['XML']) and $msg == "") {
                 txtLink.click();
                 document.body.removeChild(txtLink); // Rimuovi il link dopo il clic
               });
+
+              // Gestione pulsanti con data-url dinamico
+            document.querySelectorAll('.openIframeBtn').forEach(button => {
+              button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const url = this.getAttribute('data-url');
+                document.getElementById("myIframe").src = url;
+                document.getElementById("iframeContainer").style.display = "block";
+              });
+            });
+
+            // Pulsante per chiudere l'iframe
+            document.getElementById('closeIframeBtn').addEventListener('click', function(event) {
+              event.preventDefault();
+              document.getElementById("iframeContainer").style.display = "none";
+              document.getElementById("myIframe").src = "";
+            });
+
             </script>
           </div>
 
@@ -462,17 +584,4 @@ if (isset($_GET['XML']) and $msg == "") {
 </form>
 <?php
 require("../../library/include/footer.php");
-/*
-$directory  = __DIR__ . '/files';        // la tua cartella
-$targetDate = '2025-05-10';              // la data che ti interessa
-
-// Costruisce il pattern: "2025-05-10*.txt"
-// se hai altre estensioni, puoi mettere "*. *" o "*"
-$pattern = sprintf('%s/%s*.txt', $directory, $targetDate);
-
-// Restituisce un array di file che iniziano con la data
-$files = glob($pattern);
-
-*/
 ?>
-

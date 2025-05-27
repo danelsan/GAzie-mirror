@@ -97,6 +97,7 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, $soapEnvelope);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 curl_setopt($ch, CURLOPT_VERBOSE, true); // Debug
+curl_setopt($ch, CURLOPT_HEADER, true);
 
 $response = curl_exec($ch);
 
@@ -173,26 +174,68 @@ if ($http_code >= 200 && $http_code < 300) {
         echo "<br>✅ Tutti i movimenti sono stati processati con successo!<br>";
     }
 
+      // Mostra esito complessivo anche in assenza di errori
+    $esitoNodes = $xpath->query('//esito | //codiceEsito | //esitoInvio');
+    if ($esitoNodes->length > 0) {
+        echo "<br>📨 Esito dell'invio:<br>";
+        foreach ($esitoNodes as $node) {
+            echo "• <strong>{$node->nodeName}</strong>: " . htmlspecialchars($node->nodeValue) . "<br>";
+        }
+    } else {
+        echo "<br>ℹ️ Nessun esito esplicito trovato nella risposta.<br>";
+    }
+
 } else {
     echo "<br>❌ Errore HTTP: codice $http_code\n<br>";
      // Prova a trovare un messaggio di errore leggibile nel corpo HTML
-    $dom = new DOMDocument();
-    libxml_use_internal_errors(true);
-    $dom->loadHTML($body);
-    libxml_clear_errors();
+   // Mostra eventuale errore SOAP in modo leggibile (versione semplice)
+    if (strpos($body, '<faultstring>') !== false) {
+      preg_match('/<faultcode>(.*?)<\/faultcode>/', $body, $codeMatch);
+      preg_match('/<faultstring>(.*?)<\/faultstring>/', $body, $msgMatch);
 
-    $h1 = $dom->getElementsByTagName('h1');
-    $h3 = $dom->getElementsByTagName('h3');
+      $faultcode = isset($codeMatch[1]) ? htmlspecialchars($codeMatch[1]) : 'N/D';
+      $faultstringRaw = isset($msgMatch[1]) ? htmlspecialchars($msgMatch[1]) : 'N/D';
 
-    $errorTitle = ($h1->length > 0) ? trim($h1->item(0)->textContent) : '';
-    $errorDescription = ($h3->length > 0) ? trim($h3->item(0)->textContent) : '';
+      // Formattazione avanzata
+      $formattedMsg = $faultstringRaw;
+      if (preg_match('/^(.*?)(Gli elementi previsti sono )(.*)$/', $faultstringRaw, $matches)) {
+          $intro = $matches[1];
+          $listIntro = $matches[2];
+          $rawList = $matches[3];
 
-    if ($errorTitle || $errorDescription) {
-        echo "🔒 Dettaglio: ";
-        if ($errorTitle) echo "$errorTitle<br>";
-        if ($errorDescription) echo "$errorDescription<br>";
+          // Estrai gli elementi XML
+          $elements = explode(',', $rawList);
+          $elements = array_map('trim', $elements);
+          $formattedList = implode("<br>• ", $elements);
+
+          $formattedMsg = "$intro<br><br><strong>$listIntro</strong><br>• $formattedList";
+      }
+
+      echo "<div style='color: red; border: 1px solid red; padding: 10px; margin-top:20px;'>";
+      echo "<strong>❌ Errore SOAP</strong><br>";
+      echo "<strong>Codice:</strong> $faultcode<br>";
+      echo "<strong>Messaggio:</strong><br><div style='white-space:pre-wrap;'>$formattedMsg</div>";
+      echo "</div>";
     } else {
-        echo "📄 Corpo risposta:\n" . htmlspecialchars($body) . "<br>";
+        // Prova a trovare un messaggio di errore leggibile nel corpo HTML
+        $dom = new DOMDocument();
+        libxml_use_internal_errors(true);
+        $dom->loadHTML($body);
+        libxml_clear_errors();
+
+        $h1 = $dom->getElementsByTagName('h1');
+        $h3 = $dom->getElementsByTagName('h3');
+
+        $errorTitle = ($h1->length > 0) ? trim($h1->item(0)->textContent) : '';
+        $errorDescription = ($h3->length > 0) ? trim($h3->item(0)->textContent) : '';
+
+        if ($errorTitle || $errorDescription) {
+            echo "🔒 Dettaglio: ";
+            if ($errorTitle) echo "$errorTitle<br>";
+            if ($errorDescription) echo "$errorDescription<br>";
+        } else {
+            echo "📄 Corpo risposta:<br><pre style='white-space:pre-wrap; background:#eee; padding:10px; border:1px solid #ccc;'>" . htmlspecialchars($body) . "</pre>";
+        }
     }
 }
 

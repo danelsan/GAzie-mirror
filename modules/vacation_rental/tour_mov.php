@@ -301,6 +301,8 @@ if (isset($_GET['XML']) and $msg == "") {
   $nguest=0;
   $maxend=0;
   while ($row = gaz_dbi_fetch_array($result)){// CICLO LE PRENOTAZIONI:  per ogni prenotazione
+    $dataart = json_decode($row['art_custom'], true);
+    $room_house = (isset($dataart['vacation_rental']['room_qta']))?$dataart['vacation_rental']['room_qta']:'';
     if (strtotime($row['end']) > strtotime($maxend)){
       $maxend=$row['end'];
     }
@@ -389,7 +391,7 @@ if (isset($_GET['XML']) and $msg == "") {
       if ($n==0){// è il capogruppo
         $idcapo=$idswh;
         $xml_output .= "\t\t\t\t<idcapo></idcapo>\n";
-
+        // $xml_output .= "\t\t\t\t<camere>".$room_house."</camere>\n"; // NON ammesso. Strano perché l'insermiento manuale lo richiede ...
         $file_polstat[$n].=str_pad($guest['tipdoc'], 5);
         $file_polstat[$n].=str_pad($guest['numdoc'], 20);
         $file_polstat[$n].=str_pad($luogorilascidoc, 9);// Luogo di rilascio documento

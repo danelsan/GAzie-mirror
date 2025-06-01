@@ -147,7 +147,7 @@ $vacation_url_user=$res['val'];// carico l'url per la pagina front-end utente
 $script_transl = HeadMain(0, array('custom/modal_form'));
 
 // creo l'array (header => campi) per l'ordinamento dei record
-$terzo = (isset($_GET['auxil']) && $_GET['auxil'] == 'VOG') ? ['weekday_repeat' => 'weekday_repeat'] : ['date' => 'datemi'];
+$terzo = (isset($_GET['auxil']) && $_GET['auxil'] == 'VOG') ? ['weekday_repeat' => 'weekday_repeat'] : ['date' => 'start'];
 $sortable_headers = array(
     "ID" => "id_tes",
     $script_transl['number'] => "numdoc",
@@ -195,7 +195,7 @@ $ts = new TableSorter(
     isset($_GET["destinaz"]) ? $tesbro_e_destina :
 	(!$partner_select && isset($_GET["cliente"]) ? $tesbro_e_partners : $gTables['tesbro']),
     $passo,
-    ['datemi' => 'desc', 'numdoc' => 'desc'],
+    ['start' => 'asc', 'numdoc' => 'desc'],
     $default_where
 );
 $tipo = $auxil;
@@ -1588,29 +1588,30 @@ $ts->output_navbar();
 
 
               // colonna fiscale
-              if ( $tipo !== "VPR" ) {// la visualizzo se non è preventivo
+              if ( $tipo !== "VPR" ){//  se non è preventivo
                 echo "<td style='text-align: left;'>";
-                if ($remains_atleastone && !$processed_atleastone && $r['status']!=='CANCELLED' && $r['status']!=='ISSUE') {
-                    // L'ordine e'  da evadere.
-                  if ( $tipo !== "VOG" && $tipo !== "VPR") {
-                    echo "<a class=\"btn btn-xs btn-warning\" href=\"../../modules/vendit/select_evaord.php?id_tes=" . $r['id_tes'] . "\">Emetti documento fiscale</a>&nbsp;";
-                  }
-                }elseif ($remains_atleastone && $r['status']!=='CANCELLED' && $r['status']!=='ISSUE') {
-                      // l'a prenotazione è parzialmente evaso, mostro lista documenti e tasto per evadere rimanenze
-                      $ultimo_documento = 0;
-                      mostra_documenti_associati( $r['id_tes'], $paid );
-                      if ( $tipo == "VOG" ) {
-                          echo "<a class=\"btn btn-xs btn-default\" href=\"../../modules/vendit/select_evaord_gio.php\">evadi il rimanente</a>";
-                      } else {
-                          echo "<a class=\"btn btn-xs btn-warning\" href=\"../../modules/vendit/select_evaord.php?id_tes=" . $r['id_tes'] . "\">evadi il rimanente</a>&nbsp;";
-                          echo "<a class=\"btn btn-xs btn-warning\" href=\"../../modules/vendit/select_evaord.php?clfoco=" . $r['clfoco'] . "\">evadi cliente</a>";
-                      }
-                  } else {
-                      // la prenotazione è completamente evasa, mostro i riferimenti ai documenti che l'hanno evasa
-                      $ultimo_documento = 0;
-                      mostra_documenti_associati( $r['id_tes'], $paid );
-                  }
-				  
+				if ( intval($agent)==0){// se non c'è un proprietario/agente 
+					if ($remains_atleastone && !$processed_atleastone && $r['status']!=='CANCELLED' && $r['status']!=='ISSUE') {
+						// L'ordine e'  da evadere.
+					  if ( $tipo !== "VOG" && $tipo !== "VPR") {
+						echo "<a class=\"btn btn-xs btn-warning\" href=\"../../modules/vendit/select_evaord.php?id_tes=" . $r['id_tes'] . "\">Emetti documento fiscale</a>&nbsp;";
+					  }
+					}elseif ($remains_atleastone && $r['status']!=='CANCELLED' && $r['status']!=='ISSUE') {
+						  // l'a prenotazione è parzialmente evaso, mostro lista documenti e tasto per evadere rimanenze
+						  $ultimo_documento = 0;
+						  mostra_documenti_associati( $r['id_tes'], $paid );
+						  if ( $tipo == "VOG" ) {
+							  echo "<a class=\"btn btn-xs btn-default\" href=\"../../modules/vendit/select_evaord_gio.php\">evadi il rimanente</a>";
+						  } else {
+							  echo "<a class=\"btn btn-xs btn-warning\" href=\"../../modules/vendit/select_evaord.php?id_tes=" . $r['id_tes'] . "\">evadi il rimanente</a>&nbsp;";
+							  echo "<a class=\"btn btn-xs btn-warning\" href=\"../../modules/vendit/select_evaord.php?clfoco=" . $r['clfoco'] . "\">evadi cliente</a>";
+						  }
+					} else {
+					  // la prenotazione è completamente evasa, mostro i riferimenti ai documenti che l'hanno evasa
+					  $ultimo_documento = 0;
+					  mostra_documenti_associati( $r['id_tes'], $paid );
+					}
+				}
                   if ($r['status']=='CONFIRMED'){                         
 					  ?>
 					  <a style="float:right;" title="Genera pdf contratto" class="btn btn-xs dialog_leasecr" ref="<?php echo $r['id_tes']; ?>" nome="<?php echo $r['ragso1']; ?>" url=<?php echo "stampa_contratto.php?id_tes=". $r['id_tes'] . "&id_ag=". $r['id_agent']; ?>>

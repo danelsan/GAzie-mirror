@@ -1579,7 +1579,15 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
     while ($r = gaz_dbi_fetch_array($rs_rig)) {
       $nr++;
       $rows[$nr] = $r;
-      if ($r['nrow_linked'] == $prev_nrow ) { // è linkato con il precedente
+      if ($linked_with_next && $r['tiprig'] == 6 ) { // il precedente dovrebbe essere linkato con questo, lo accetto solo se di tipo 6 testo
+        $rows[$nr]['nrow']=$nr;
+        $rows[$nr]['nrow_linked']=intval($nr-1);
+        $linked_with_next=false;
+      } elseif ($r['nrow'] == $prev_nrow ) { // ha lo stesso nrow del precedente, è una anomalia di per se, lo svincolo
+        $rows[$nr]['nrow']=$nr;
+        $rows[$nr]['nrow_linked']=$nr;
+        $linked_with_next=false;
+      } elseif ($r['nrow_linked'] == $prev_nrow ) { // è linkato con il precedente
         if ($linked_with_next) { // ed anche il precedente era linkato, tutto ok
           $rows[$nr]['nrow']=$nr;
           $rows[$nr]['nrow_linked']=intval($nr-1);
@@ -1593,7 +1601,6 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
         }
       } elseif ($r['nrow_linked'] == intval($r['nrow']+1) ) { // è linkato con il successivo
         $rows[$nr]['nrow']=$nr;
-        $rows[$nr]['nrow_linked']=$nr;
         $rows[$nr]['nrow_linked']= intval($nr+1);
         $linked_with_next =true; // tengo traccia per controllare il prossimo
       } else  {

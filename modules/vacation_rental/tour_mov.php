@@ -218,6 +218,15 @@ if (isset($_GET['anteprima']) and $msg == "") {
                     <?php
                     $disable_xml=0;
                   foreach ($raggruppato[$key] as $alloggio) { // per ogni check-in giornaliero della struttura
+				   
+					// carico il json del pre-checkin
+					$DownloadDir = __DIR__.DIRECTORY_SEPARATOR.'self_checkin'.DIRECTORY_SEPARATOR.'uploads'.DIRECTORY_SEPARATOR.$alloggio['id_tesbro'].'/data.json';
+					if ($json_string = @file_get_contents($DownloadDir)){
+						$dati = json_decode($json_string, true); // true = converte in array associativo
+						//echo "<pre>",print_r($dati),"</pre>";
+					}else{
+					  echo "<br>ERRORE: manca il file del checkin";exit;
+					}
                       $data = json_decode($alloggio['art_custom'],true);
                       if (is_array($data['vacation_rental'])){ // se c'è il modulo "vacation rental" nel custom field
 						if (isset($data['vacation_rental']['accommodation_type']) && isset ($data['vacation_rental']['room_qta'])){
@@ -238,7 +247,7 @@ if (isset($_GET['anteprima']) and $msg == "") {
                     ?>
                     <!-- Righe di dati -->
                     <div class="row" style="padding: 8px 0; border-bottom: 1px solid #ccc;">
-                      <div class="col-xs-3 text-left"><?php echo $alloggio['ragso1']," ",$alloggio['ragso2']; ?></div>
+                      <div class="col-xs-3 text-left"><?php echo $dati[0]['nome']," ",$dati[0]['cognome']; ?></div>
                       <div class="col-xs-2 text-left"><?php echo $alloggio['checked_in_date']; ?></div>
                       <div class="col-xs-1 text-left"><?php echo $alloggio['adult'],"+",$alloggio['child']; ?></div>
                       <div class="col-xs-2 text-center"><?php echo $type[$data['vacation_rental']['accommodation_type']]," ",$alloggio['house_code']; ?></div>

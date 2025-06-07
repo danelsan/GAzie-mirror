@@ -220,7 +220,11 @@ if (isset($_GET['anteprima']) and $msg == "") {
                   foreach ($raggruppato[$key] as $alloggio) { // per ogni check-in giornaliero della struttura
                       $data = json_decode($alloggio['art_custom'],true);
                       if (is_array($data['vacation_rental'])){ // se c'è il modulo "vacation rental" nel custom field
+						if (isset($data['vacation_rental']['accommodation_type']) && isset ($data['vacation_rental']['room_qta'])){
                            $type= array(3 => 'Appartamento', 4 => 'Casa vacanze', 5=> 'Bed & breakfast', 6=> 'Camera', 7=> 'Locazione turistica');
+						}else{
+							echo "ERRORE: Alcuni dati della struttura non sono stati impostati (tipo o numero camere)";exit;
+						}
                       }else{
                         echo "ERRORE: manca il custom field";exit;
                       }

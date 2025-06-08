@@ -117,7 +117,6 @@ class DocContabVars {
         $banapp = $resban;
         $this->banapp =($banapp)?$banapp:array('descri'=>'');
        // $anagrafica = new Anagrafica();
-
         //commentato perché nel frontend mi da errore in quanto la classe Anagrafica sta in function.inc e getPartner usa l'sql di gazie
 
         //$this->banacc =($this->pagame)?$anagrafica->getPartner($this->pagame['id_bank']):'';
@@ -439,7 +438,7 @@ class DocContabVars {
             $this->child = $rigev['child'];
             $this->checkinout = " check-in:".date_format(date_create($rigev['start']),"d-m-Y")." check-out:".date_format(date_create($rigev['end']),"d-m-Y");
           }elseif(is_array($data['vacation_rental'])){// se è un extra
-            $extras[] = " ".$rigev['codice']." -";// aggiungo l'extra all'array
+            $extras[] = " ".intval($rigev['quanti'])." ".$rigev['codice']." -";// aggiungo l'extra all'array
           }
         }
       }
@@ -759,7 +758,7 @@ function createDocument($testata, $templateName, $gTables, $rows = 'rigdoc', $de
 	  if (file_exists($PDFurl)){
 		header("Content-Length: " . filesize($PDFurl));
 
-		// Send the file to the browser.	  
+		// Send the file to the browser.
 		readfile($PDFurl);
 	  }
       return;

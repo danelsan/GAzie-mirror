@@ -19,7 +19,6 @@ function mostraErrore($messaggio) {
 // === Trova tutti i codici struttura disponibili ===
 $codiciDisponibili = [];
 if (is_dir($percorsoRicevute)) {
-	
     foreach (scandir($percorsoRicevute) as $entry) {
         if ($entry !== '.' && $entry !== '..' && is_dir("$percorsoRicevute/$entry")) {
             $codiciDisponibili[] = $entry;
@@ -28,6 +27,11 @@ if (is_dir($percorsoRicevute)) {
     sort($codiciDisponibili);
 } else {
     mostraErrore("Cartella ricevute_alloggiati non trovata.");
+}
+
+// === Se c'è una sola struttura e non è stato selezionato manualmente, la selezioniamo automaticamente
+if (count($codiciDisponibili) === 1 && !$codiceStruttura) {
+    $codiceStruttura = $codiciDisponibili[0];
 }
 
 // === Se codice struttura non selezionato, mostra solo il form ===
@@ -52,8 +56,8 @@ if (!$codiceStruttura) {
                         <option value="<?php echo htmlspecialchars($codice); ?>"><?php echo htmlspecialchars($codice); ?></option>
                     <?php endforeach; ?>
                 </select>
-				<input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>">
-			</div>
+                <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>">
+            </div>
             <div class="col-md-2 mt-4">
                 <button type="submit" class="btn btn-primary">Visualizza</button>
             </div>
@@ -98,6 +102,7 @@ $righePagina = array_slice($righe, $offset, $perPagina);
 
     <form method="GET" class="row gy-2 gx-3 align-items-center mb-4">
         <input type="hidden" name="codice_struttura" value="<?php echo htmlspecialchars($codiceStruttura); ?>">
+        <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>">
         <div class="col-auto">
             <label class="form-label" for="mese">📅 Mese (es: 2025-06):</label>
             <input type="text" class="form-control" id="mese" name="mese" placeholder="YYYY-MM" value="<?php echo htmlspecialchars($filtroMese); ?>">
@@ -145,7 +150,7 @@ $righePagina = array_slice($righe, $offset, $perPagina);
             <?php for ($p = 1; $p <= $totPagine; $p++): ?>
                 <li class="page-item <?php echo $p == $pagina ? 'active' : ''; ?>">
                     <a class="page-link"
-                       href="?codice_struttura=<?php echo urlencode($codiceStruttura); ?>&pagina=<?php echo $p; ?>&mese=<?php echo urlencode($filtroMese); ?>">
+                       href="?codice_struttura=<?php echo urlencode($codiceStruttura); ?>&path=<?php echo urlencode($path); ?>&pagina=<?php echo $p; ?>&mese=<?php echo urlencode($filtroMese); ?>">
                         <?php echo $p; ?>
                     </a>
                 </li>

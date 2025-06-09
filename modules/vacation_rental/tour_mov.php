@@ -347,7 +347,7 @@ if (isset($_GET['XML']) and $msg == "") {
       echo "<br>ERRORE: manca il file del checkin";exit;
     }
     $n=0;
-
+    $testate[]=$row['id_tesbro'];
     foreach($dati as $guest){// per ogni ospite presente nel file del pre checkin
 
       $file_polstat[$n]='';
@@ -543,7 +543,10 @@ foreach ($periodo as $date) {
         </div>
     </div>
     <?php
-  }else{
+  }else{// nessun errore nella creazione e salvataggio dei file
+    // creo un file temporaneo per passare tutte le testate interessate
+    $filepath = 'files/temp_ids.json';
+    file_put_contents($filepath, json_encode($testate));
     ?>
     <div class="panel panel-default gaz-table-form div-bordered" style="max-width:80%;">
         <div class="container-fluid">

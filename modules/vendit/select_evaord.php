@@ -26,6 +26,13 @@ require("../../library/include/datlib.inc.php");
 require("../../modules/magazz/lib.function.php");
 $admin_aziend = checkAdmin();
 $pdf_to_modal = gaz_dbi_get_row($gTables['company_config'], 'var', 'pdf_reports_send_to_modal')['val'];
+
+if (!isset($_POST['ritorno'])) {
+  $form['ritorno'] = $_SERVER['HTTP_REFERER'];
+} else {
+  $form['ritorno'] = $_POST['ritorno'];
+}
+
 $anno = date("Y");
 $msg = "";
 $lm = new lotmag;
@@ -34,15 +41,7 @@ $docOperat = $upd_mm->getOperators();
 $show_artico_composit = gaz_dbi_get_row($gTables['company_config'], 'var', 'show_artico_composit');
 $tipo_composti = gaz_dbi_get_row($gTables['company_config'], 'var', 'tipo_composti');
 
-if ( isset($_GET['idfeva']))
-{
-    gaz_dbi_put_row($gTables['tesbro'], "id_tes", $_GET['idfeva'], "status", "EVASO");
-    header("Location: select_evaord.php?clfoco=".$_GET['clfoco']);
-}
-
-/**
- * carica i dati del cliente dentro $form
- */
+// carica i dati del cliente dentro $form
 function caricaCliente(&$form) {
     global $gTables;
     $_POST['num_rigo'] = 0;
@@ -1224,7 +1223,57 @@ function choice_ddt_type() {
     });
 	});
 }
-
+$( function() {
+  $("#date_cancelrows").datepicker({showButtonPanel: true, showOtherMonths: true, selectOtherMonths: true});
+	$("#dialog_cancelrows").dialog({ autoOpen: false });
+	$('.dialog_cancelrows').click(function() {
+    var acc_id_rig = {} // json di tutti gli id_rig
+    var acc_descrirows = '';
+    acc_id_rig["rows_ref"] = new Array //create array
+    $(".cancellable").each(function(index){
+      if ( this.checked ) {
+        acc_id_rig["rows_ref"].push($(this).attr('idrig')); //push value in array
+        console.log($(this).attr('descrirow'));
+        acc_descrirows += '<div>&middot; '+$(this).attr('descrirow')+'</div>';
+      }
+    });
+    $('p#cancelrows').append(acc_descrirows);
+    //console.log(JSON.stringify(acc_id_rig));
+		$( "#dialog_cancelrows" ).dialog({
+			minHeight: 1,
+			width: "auto",
+			modal: "true",
+			show: "blind",
+			hide: "explode",
+			buttons: {
+   			close: {
+					text:'Non annullare',
+					'class':'btn btn-default',
+          click:function() {
+            $(this).dialog("close");
+          }
+        },
+				delete:{
+					text:'Annulla i righi',
+					'class':'btn btn-danger',
+					click:function (event, ui) {
+            var reason = $("#reason_cancelrows").val();
+            var dateca = $("#date_cancelrows").val();
+            $.ajax({
+              data: {'type':'cancel_order_rows','ref': acc_id_rig,'reason':reason,'dateca':dateca},
+              type: 'POST',
+              url: './delete.php',
+              success: function(output){
+                //alert(output);
+                window.location.href = '<?= $form['ritorno']; ?>';
+              }
+            });
+				}}
+			}
+		});
+		$("#dialog_cancelrows" ).dialog( "open" );
+	});
+});
 </script>
 <script type="text/javascript" id="datapopup">
     var cal = new CalendarPopup();
@@ -1260,6 +1309,15 @@ function choice_ddt_type() {
     };
 </script>
 <form method="POST" name="myform" id="myform">
+  <!-- FINESTRE MODALI -->
+  <div class="modal" id="dialog_cancelrows" title='Annullamento righi' style="display:none">
+    <p class="ui-state-highlight" >Righi che verranno annullati:</p>
+    <p id="cancelrows"></p>
+    <p class="ui-state-highlight" >Data di annullamento:</p>
+    <p><input type="text" id="date_cancelrows" name="date_cancelrows" maxlength="10" value=""/></p>
+    <p class="ui-state-highlight" >Motivo: </p>
+    <p><input type="text" id="reason_cancelrows" name="reason_cancelrows" maxlength="1000" value=""/></p>
+  </div>
   <div class="framePdf panel panel-success" style="display: none; position: fixed; left: 5%; top: 10px">
     <div class="col-lg-12">
       <div class="col-xs-11"><h4><?php echo $script_transl['print'];; ?></h4></div>
@@ -1283,7 +1341,7 @@ function choice_ddt_type() {
     }
     echo "<input type=\"hidden\" value=\"" . $form['hidden_req'] . "\" name=\"hidden_req\" />\n";
     ?>
-    <input type="hidden" name="ritorno" value="<?php echo $_POST['ritorno']; ?>">
+    <input type="hidden" name="ritorno" value="<?php echo $form['ritorno']; ?>">
     <input type="hidden" name="id_tes" value="<?php echo $form['id_tes']; ?>">
     <input type="hidden" name="tipdoc" value="<?php echo $form['tipdoc']; ?>">
 	<!-- visualizzate nel campo pagamento
@@ -1490,10 +1548,8 @@ function choice_ddt_type() {
                 if ( isset($_GET['ritorno']) ) $checkin = ' checked';
 
                 if ($ctrl_tes != $v['id_tes']) {
-                    echo "<tr><td class=\"FacetDataTD\" colspan=\"9\"> " . $script_transl['from'] . " <a href=\"admin_broven.php?Update&id_tes=" . $v["id_tes"] . "\" title=\"" . $script_transl['upd_ord'] . "\"> " . $script_transl['doc_name'][$v['tipdoc']] . " n." . $v['numdoc'] . "</a> " . $script_transl['del'] . ' ' . gaz_format_date($v['datemi']) . " </td>
-                    <td id='forzaevasione'>
-                    <a class='btn btn-xs btn-success' href='select_evaord.php?clfoco=".$form['clfoco']."&idfeva=".$v["id_tes"]."'>Forza evasione</a>
-                    </td></tr>";
+                    echo "<tr><td class=\"FacetDataTD\" colspan=10> " . $script_transl['from'] . " <a href=\"admin_broven.php?Update&id_tes=" . $v["id_tes"] . "\" title=\"" . $script_transl['upd_ord'] . "\"> " . $script_transl['doc_name'][$v['tipdoc']] . " n." . $v['numdoc'] . "</a> " . $script_transl['del'] . ' ' . gaz_format_date($v['datemi']) . " </td>
+                    </tr>";
                 }
 
                 if (empty($checkin) || $checkin == ' disabled ') {
@@ -1720,7 +1776,7 @@ function choice_ddt_type() {
                     echo "<td align=\"right\">" . $v['sconto'] . "</td>\n";
                     echo "<td align=\"right\">" . $v['provvigione'] . "</td>\n";
                     echo "<td align=\"right\">$imprig</td>\n";
-                    echo "<td align=\"center\"><input type=\"checkbox\" name=\"righi[$k][checkval]\"  title=\"" . $script_transl['checkbox'] . "\" $checkin value=\"$imprig\" onclick=\"this.form.total.value=calcheck(this);\"></td>\n";
+                    echo '<td align="center"><input type="checkbox" name="righi['.$k.'][checkval]" class="cancellable" title="' . $script_transl['checkbox'].'" '.$checkin.' idrig="'. $v['id_rig'] .'" descrirow="'.str_replace('"','', $v['codart'].' '.$v['descri'].' '.$v['unimis'].' '.floatval($v['quanti'])).'" value="'.$imprig.'" onclick="this.form.total.value=calcheck(this);"></td>';
                 } else {
                     echo "<td></td>";
                     echo "<td></td>";
@@ -1740,16 +1796,16 @@ function choice_ddt_type() {
                     $hRowFlds .= "<input type=\"hidden\" name=\"righi[$k][$current]\" value=\"{$v[$current]}\">\n";
                 }
             }
-            echo "<tr><td class=\"FacetFieldCaptionTD\">\n";
+            echo "<tr>";
             echo $hRowFlds;
             unset($fields, $hRowFlds);
 
             echo "<input type=\"hidden\" name=\"hiddentot\" value=\"$total_order\">\n";
-            echo "<input type=\"submit\" name=\"Return\" value=\"" . $script_transl['return'] . "\">&nbsp;</td>\n";
-            echo "<td align=\"right\" colspan=\"6\" class=\"FacetFieldCaptionTD\">\n";
-			echo "<input type=\"submit\" class=\"btn btn-success\" name=\"vri\" value=\"" . $script_transl['issue_vri'] . "\" accesskey=\"m\" />\n";
-            echo '<input type="hidden"  id="choice_ddt_type" name="" />';
-            echo ' <a class="btn btn-success" onclick="choice_ddt_type();" title="Scegli modulo per stampa"/>' . $script_transl['issue_ddt'] . "</a> ";
+            echo '<tr><td colspan=7 class="FacetFieldCaptionTD">';
+            echo '<div class="col-xs-12 col-md-2"><a class="btn btn-xs btn-danger dialog_cancelrows" title="Se selezionati i righi verranno annullati ma per tracciamento verranno conservati sul DB con tiprig=901" /> Annulla evasione righi</a></div>';
+            echo '<div class="col-xs-12 col-md-10 text-right"><input type="submit" class="btn btn-success" name="vri" value="' . $script_transl['issue_vri'] . '" accesskey="m" />';
+            echo '<input type="hidden"  id="choice_ddt_type" name="" /> ';
+            echo '<a class="btn btn-success" onclick="choice_ddt_type();" title="Scegli modulo per stampa"/>' . $script_transl['issue_ddt'] . "</a> ";
             echo "<input type=\"submit\" class=\"btn btn-success\" name=\"fai\" value=\"" . $script_transl['issue_fat'] . "\" accesskey=\"f\" />\n";
             if (!empty($alert_sezione))
                 echo " &sup1;";
@@ -1761,7 +1817,7 @@ function choice_ddt_type() {
 			} else {
 				echo "<input type=\"submit\" class=\"btn btn-success\" name=\"vco\" value=\"" . $script_transl['issue_cor'] . "\" accesskey=\"c\" />\n";
 			}
-            echo "</td>";
+            echo "<div></td>";
             echo "<td colspan=\"2\" class=\"FacetFieldCaptionTD\" align=\"right\">" . $script_transl['taxable'] . " " . $admin_aziend['html_symbol'] . " &nbsp;\n";
             echo "<input type=\"text\"  style=\"text-align:right;\" value=\"" . number_format(($total_order - $total_order * $form['sconto'] / 100 + $form['traspo']), 2, '.', '') . "\" name=\"total\"  readonly />\n";
             echo "</td></tr>";

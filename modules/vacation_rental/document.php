@@ -64,6 +64,7 @@ class DocContabVars {
 
         if ($data_tesbro = json_decode($tesdoc['custom_field'], TRUE)){
          $this->status = $data_tesbro['vacation_rental']['status'];
+         $this->security_deposit = (isset($data_tesbro['vacation_rental']['security_deposit']))?$data_tesbro['vacation_rental']['security_deposit']:-1;
         }
 
         $this->layout_pos_logo_on_doc = $company['val'];
@@ -532,7 +533,11 @@ class DocContabVars {
               $this->totiva += ($rigo['importo']*$rigo['pervat'])/100;
               if (isset ($rigo['custom_field']) && $data = json_decode($rigo['custom_field'], TRUE)) { // se esiste un json nel custom field
                 if (is_array($data['vacation_rental']) && isset($data['vacation_rental']['accommodation_type'])){ // se è un alloggio
-                  $security_deposit = $data['vacation_rental']['security_deposit']; //prendo il deposito cauzionale
+                  if ($this->security_deposit==-1){
+                    $security_deposit = $data['vacation_rental']['security_deposit']; //prendo il deposito cauzionale
+                  }else{
+                    $security_deposit = $this->security_deposit;
+                  }
                   $agent = $data['vacation_rental']['agent']; //prendo l'ID del proprietatio
                 }
               }
@@ -849,6 +854,7 @@ function createDocument($testata, $templateName, $gTables, $rows = 'rigdoc', $de
 		$docVars->intesta2=$ag_anagra['indspe']." ".$ag_anagra['capspe']." ".$ag_anagra['citspe']." ".$ag_anagra['prospe'];
 		$docVars->intesta3= "tel.: ".$ag_anagra['telefo']." ";
 		$docVars->intesta4= "e-mail: ".$ag_anagra['e_mail'];
+    $docVars->security_deposit= $testata['security_deposit'];
 	}
     $pdf->setVars($docVars, $templateName);
     $pdf->setTesDoc();

@@ -1747,11 +1747,7 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
 } elseif ((!isset($_POST['Update'])) and ( isset($_GET['Update']))) { //se e' il primo accesso per UPDATE
     $tesbro = gaz_dbi_get_row($gTables['tesbro'], "id_tes", intval($_GET['id_tes']));
     $form['security_deposit']=0;
-    if ($tesbro_data = json_decode($tesbro['custom_field'], TRUE)){// se la testata ha un custom field
-      if (is_array($tesbro_data['vacation_rental']) && isset($tesbro_data['vacation_rental']['security_deposit'])){
-        $form['security_deposit']=$tesbro_data['vacation_rental']['security_deposit'];
-      }
-    }
+   
     $anagrafica = new Anagrafica();
     $cliente = $anagrafica->getPartner($tesbro['clfoco']);
     $form['indspe'] = $cliente['indspe'];
@@ -1914,6 +1910,15 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
               $form['id_agente'] = $data['vacation_rental']['agent'];// questo è il proprietario
               $gen_iva_perc = $iva_row['aliquo'];
               $gen_iva_code = $rigo['codvat'];
+				if ($tesbro_data = json_decode($tesbro['custom_field'], TRUE)){// se la testata ha un custom field
+				  if (is_array($tesbro_data['vacation_rental']) && isset($tesbro_data['vacation_rental']['security_deposit'])){
+					$form['security_deposit']=$tesbro_data['vacation_rental']['security_deposit'];
+				  }else{
+					 $form['security_deposit']= $data['vacation_rental']['security_deposit'];
+				  }
+				}else{
+					 $form['security_deposit']= $data['vacation_rental']['security_deposit'];
+				  }
 
               if (intval ($articolo['id_artico_group'])>0){// se l'alloggio fa parte di una struttura
                 $facility = gaz_dbi_get_row($gTables['artico_group'], "id_artico_group", $articolo['id_artico_group']);// leggo la struttura

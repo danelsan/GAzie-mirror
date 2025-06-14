@@ -521,8 +521,8 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
             if ($toDo == 'update') { // e' una modifica
 
               // CANCELLO TUTTO
-              $tesbro = gaz_dbi_get_row($gTables['tesbro'], "id_tes", intval($form['id_tes'])); // prima di cancellare prendo il vecchio custom field
-              $form['custom_field']=$tesbro['custom_field']; // riprendo il custom_field esistente
+              $tesbro = gaz_dbi_get_row($gTables['tesbro'], "id_tes", intval($form['id_tes'])); // prima di cancellare prendo il vecchio custom field perché nel form non ce l'ho
+              $form['custom_field']=$tesbro['custom_field']; // riprendo il custom_field tesbro esistente
 
               gaz_dbi_del_row($gTables['tesbro'], "id_tes", $form['id_tes']);
 
@@ -533,7 +533,7 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
 
               }
 
-              $rental_events = gaz_dbi_get_row($gTables['rental_events'], "id_tesbro", intval($form['id_tes']), " AND type = 'ALLOGGIO'"); // prima di cancellare prendo il vecchio rental_events custom field
+              $rental_events = gaz_dbi_get_row($gTables['rental_events'], "id_tesbro", intval($form['id_tes']), " AND type = 'ALLOGGIO'"); // prima di cancellare prendo il vecchio rental_events
               $access = (strlen($rental_events['access_code']>0))?$rental_events['access_code']:bin2hex(openssl_random_pseudo_bytes(5));// se non c'è un codice accesso lo creo e inserisco;
               gaz_dbi_del_row($gTables['rental_events'], "id_tesbro", $form['id_tes']);
               // dovrò aggiornare tesbro negli eventuali pagamenti effettuati su rental payment ma posso farlo solo dopo aver creato il nuovo tesbro
@@ -650,12 +650,14 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
                 $form['checked_in_date']=(isset($rental_events['checked_in_date']))?$rental_events['checked_in_date']:NULL;
                 $form['checked_out_date']=(isset($rental_events['checked_out_date']))?$rental_events['checked_out_date']:NULL;
                 $form['voucher_id']=(isset($rental_events['voucher_id']))?$rental_events['voucher_id']:NULL;
+				$form['status_webservice']=(isset($rental_events['status_webservice']))?$rental_events['status_webservice']:0;
                 $form['type']="ALLOGGIO";
                 $form['access_code'] = $access;
                 $form['title']= "Soggiorno ".$accomodation_type." ".$form['rows'][$i]['codart']." - ".$form['search']['clfoco'];
                 $form['house_code']=$form['rows'][$i]['codart'];
-                $columns = array('id', 'title', 'start', 'end', 'house_code', 'id_tesbro', 'id_rigbro', 'voucher_id', 'checked_in_date', 'checked_out_date', 'adult', 'child', 'type', 'access_code');
-                tableInsert($table, $columns, $form);
+                $columns = array('id', 'title', 'start', 'end', 'house_code', 'id_tesbro', 'id_rigbro', 'voucher_id', 'checked_in_date', 'checked_out_date', 'adult', 'child', 'type', 'access_code', 'status_webservice');
+                tableInsert($table, $columns, $form);// inserisco il nuovo rental events
+				
                 $artico = gaz_dbi_get_row($gTables['artico'], "codice", $form['rows'][$i]['codart']);
                 $data = json_decode($artico['custom_field'], TRUE);
                 $data['vacation_rental']['pause']=(isset($data['vacation_rental']['pause']))?$data['vacation_rental']['pause']:0;

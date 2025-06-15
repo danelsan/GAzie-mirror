@@ -75,6 +75,9 @@ function caricaCliente(&$form) {
         $ctrl_testate = $testate['id_tes'];
         $rs_righi = gaz_dbi_dyn_query("*", $gTables['rigbro'], "id_tes = " . $testate['id_tes'], "id_rig asc");
         while ($rigo = gaz_dbi_fetch_array($rs_righi)) {
+          if ( $rigo['tiprig'] == 910 ) { // gli annullati non li propongo più
+            continue;
+          }
           $articolo = gaz_dbi_get_row($gTables['artico'], "codice", $rigo['codart']);
           if (!$articolo){ $articolo=['SIAN'=>'','quality'=>'','lot_or_serial'=>'',]; }
           $form['righi'][$_POST['num_rigo']]['id_rig'] = $rigo['id_rig'];
@@ -105,7 +108,7 @@ function caricaCliente(&$form) {
           }
           if (!isset($form['righi'][$_POST['num_rigo']]['evadibile'])) {
             $totale_evadibile = $rigo['quanti'];
-            $rs_evasi = gaz_dbi_dyn_query("*", $gTables['rigdoc'], "id_order=" . $rigo['id_tes'] . " AND codart='" . $rigo['codart'] . "'", "id_rig asc");
+            $rs_evasi = gaz_dbi_dyn_query("*", $gTables['rigdoc'], "id_order=" . $rigo['id_tes'] . " AND codart='" . $rigo['codart'] . "' AND tiprig < 900", "id_rig asc");
             while ($rg_evasi = gaz_dbi_fetch_array($rs_evasi)) {
                 $totale_evadibile -= $rg_evasi['quanti'];
             }
@@ -218,97 +221,98 @@ if (!isset($_POST['id_tes'])) { //al primo accesso  faccio le impostazioni ed il
     $form['units'] = 0;
     $form['volume'] = 0;
     $form['tipdoc'] = '';
-    if (isset($_GET['id_tes'])) { //se � stato richiesto un ordine specifico lo carico
-        $form['id_tes'] = intval($_GET['id_tes']);
-        $testate = gaz_dbi_get_row($gTables['tesbro'], "id_tes", $form['id_tes']);
-        $form['clfoco'] = $testate['clfoco'];
-        $anagrafica = new Anagrafica();
-        $cliente = $anagrafica->getPartner($form['clfoco']);
-        $id_des = $anagrafica->getPartner($testate['id_des']);
-        $form['search']['clfoco'] = substr($cliente['ragso1'], 0, 10);
-        $form['seziva'] = $testate['seziva'];
-        $form['tipdoc'] = $testate['tipdoc'];
-        $form['indspe'] = $cliente['indspe'];
-        $form['traspo'] = $testate['traspo'];
-        $form['speban'] = $testate['speban'];
-        $form['stamp'] = $testate['stamp'];
-        $form['expense_vat'] = $testate['expense_vat'];
-        $form['round_stamp'] = $testate['round_stamp'];
-        $form['virtual_taxstamp'] = $testate['virtual_taxstamp'];
-        $form['vettor'] = $testate['vettor'];
-        $form['portos'] = $testate['portos'];
-        $form['imball'] = $testate['imball'];
-        $form['pagame'] = $testate['pagame'];
-        $form['destin'] = $testate['destin'];
-        $form['id_des'] = $testate['id_des'];
-        $form['search']['id_des'] =($id_des)?substr($id_des['ragso1'], 0, 10):'';
-        $form['id_des_same_company'] = $testate['id_des_same_company'];
-        $form['caumag'] = $testate['caumag'];
-        $form['id_agente'] = $testate['id_agente'];
-        $form['banapp'] = $testate['banapp'];
-        $form['spediz'] = $testate['spediz'];
-        $form['sconto'] = $testate['sconto'];
-        $form['listin'] = $testate['listin'];
-        $form['net_weight'] = $testate['net_weight'];
-        $form['gross_weight'] = $testate['gross_weight'];
-        $form['units'] = $testate['units'];
-        $form['volume'] = $testate['volume'];
-        $rs_righi = gaz_dbi_dyn_query("*", $gTables['rigbro'], "id_tes = " . $form['id_tes'], "id_rig asc");
-		$codiciarticoli=array();
-        while ($rigo = gaz_dbi_fetch_array($rs_righi)) {
-            $articolo = gaz_dbi_get_row($gTables['artico'], "codice", $rigo['codart']);
-
-            $form['righi'][$_POST['num_rigo']]['id_rig'] = $rigo['id_rig'];
-            $form['righi'][$_POST['num_rigo']]['tiprig'] = $rigo['tiprig'];
-            $form['righi'][$_POST['num_rigo']]['id_tes'] = $rigo['id_tes'];
-            $form['righi'][$_POST['num_rigo']]['tipdoc'] = $testate['tipdoc'];
-            $form['righi'][$_POST['num_rigo']]['datemi'] = $testate['datemi'];
-            $form['righi'][$_POST['num_rigo']]['numdoc'] = $testate['numdoc'];
-            $form['righi'][$_POST['num_rigo']]['descri'] = $rigo['descri'];
-            $form['righi'][$_POST['num_rigo']]['id_body_text'] = $rigo['id_body_text'];
-            $form['righi'][$_POST['num_rigo']]['codart'] = $rigo['codart'];
-            $form['righi'][$_POST['num_rigo']]['unimis'] = $rigo['unimis'];
-            $form['righi'][$_POST['num_rigo']]['prelis'] = $rigo['prelis'];
-            $form['righi'][$_POST['num_rigo']]['provvigione'] = $rigo['provvigione'];
-            $form['righi'][$_POST['num_rigo']]['ritenuta'] = $rigo['ritenuta'];
-            $form['righi'][$_POST['num_rigo']]['sconto'] = $rigo['sconto'];
-            $form['righi'][$_POST['num_rigo']]['quanti'] = $rigo['quanti'];
-			$form['righi'][$_POST['num_rigo']]['lot_or_serial'] = (isset($articolo['lot_or_serial']))?$articolo['lot_or_serial']:0;
-			$form['righi'][$_POST['num_rigo']]['id_lotmag'] = "";
-			$form['righi'][$_POST['num_rigo']]['cod_operazione'] = 11;
-			$form['righi'][$_POST['num_rigo']]['SIAN'] = (isset($articolo['SIAN']))?$articolo['SIAN']:0;
-			$form['righi'][$_POST['num_rigo']]['quality'] = (isset($articolo['quality']))?$articolo['quality']:'';
-			$form['righi'][$_POST['num_rigo']]['recip_stocc'] = "";
-			if (isset($articolo['SIAN']) AND $articolo['SIAN']>0){
-				$camp_artico = gaz_dbi_get_row($gTables['camp_artico'], "codice", $rigo['codart']);
-				$form['righi'][$_POST['num_rigo']]['confezione'] = $camp_artico['confezione'];
-			} else {
-				$form['righi'][$_POST['num_rigo']]['confezione'] = 0;
-			}
-			$totale_evadibile = $rigo['quanti'];
-			if (!in_array(array($rigo['codart'],$rigo['descri']),$codiciarticoli)) {
-				$codiciarticoli[]=array($rigo['codart'],$rigo['descri']);
-				$evasi = gaz_dbi_get_single_value($gTables['rigdoc'], "SUM(quanti)", "id_order = ".$form['id_tes']." AND codart='".$rigo['codart']."' AND descri like '".addslashes($rigo['descri'])."%'");
-				$totale_evadibile -= $evasi;
-				if ($totale_evadibile == 0) {
-					$form['righi'][$_POST['num_rigo']]['checkval'] = false;
-				}
-			}
-			// Antonio Germani - controllo la giacenza in magazzino e gli ordini già ricevuti
-			$mv = $upd_mm->getStockValue(false, $rigo['codart']);
-			$magval = array_pop($mv);
-			$magval=(is_numeric($magval))?['q_g'=>0,'v_g'=>0]:$magval;
-			$form['righi'][$_POST['num_rigo']]['giac'] = $magval['q_g'];
-			$form['righi'][$_POST['num_rigo']]['ordin'] = $upd_mm->get_magazz_ordinati($rigo['codart'], "VOR");
-
-            $form['righi'][$_POST['num_rigo']]['evaso_in_precedenza'] = $rigo['quanti'] - $totale_evadibile;
-            $form['righi'][$_POST['num_rigo']]['evadibile'] = $totale_evadibile;
-            $form['righi'][$_POST['num_rigo']]['id_doc'] = $rigo['id_doc'];
-            $form['righi'][$_POST['num_rigo']]['codvat'] = $rigo['codvat'];
-            $form['righi'][$_POST['num_rigo']]['pervat'] = $rigo['pervat'];
-            $form['righi'][$_POST['num_rigo']]['codric'] = $rigo['codric'];
-            $_POST['num_rigo'] ++;
+    if (isset($_GET['id_tes'])) { //se è stato richiesto un ordine specifico lo carico
+      $form['id_tes'] = intval($_GET['id_tes']);
+      $testate = gaz_dbi_get_row($gTables['tesbro'], "id_tes", $form['id_tes']);
+      $form['clfoco'] = $testate['clfoco'];
+      $anagrafica = new Anagrafica();
+      $cliente = $anagrafica->getPartner($form['clfoco']);
+      $id_des = $anagrafica->getPartner($testate['id_des']);
+      $form['search']['clfoco'] = substr($cliente['ragso1'], 0, 10);
+      $form['seziva'] = $testate['seziva'];
+      $form['tipdoc'] = $testate['tipdoc'];
+      $form['indspe'] = $cliente['indspe'];
+      $form['traspo'] = $testate['traspo'];
+      $form['speban'] = $testate['speban'];
+      $form['stamp'] = $testate['stamp'];
+      $form['expense_vat'] = $testate['expense_vat'];
+      $form['round_stamp'] = $testate['round_stamp'];
+      $form['virtual_taxstamp'] = $testate['virtual_taxstamp'];
+      $form['vettor'] = $testate['vettor'];
+      $form['portos'] = $testate['portos'];
+      $form['imball'] = $testate['imball'];
+      $form['pagame'] = $testate['pagame'];
+      $form['destin'] = $testate['destin'];
+      $form['id_des'] = $testate['id_des'];
+      $form['search']['id_des'] =($id_des)?substr($id_des['ragso1'], 0, 10):'';
+      $form['id_des_same_company'] = $testate['id_des_same_company'];
+      $form['caumag'] = $testate['caumag'];
+      $form['id_agente'] = $testate['id_agente'];
+      $form['banapp'] = $testate['banapp'];
+      $form['spediz'] = $testate['spediz'];
+      $form['sconto'] = $testate['sconto'];
+      $form['listin'] = $testate['listin'];
+      $form['net_weight'] = $testate['net_weight'];
+      $form['gross_weight'] = $testate['gross_weight'];
+      $form['units'] = $testate['units'];
+      $form['volume'] = $testate['volume'];
+      $rs_righi = gaz_dbi_dyn_query("*", $gTables['rigbro'], "id_tes = " . $form['id_tes'], "id_rig asc");
+      $codiciarticoli=[];
+      while ($rigo = gaz_dbi_fetch_array($rs_righi)) {
+        if ( $rigo['tiprig'] == 910 ) { // gli annullati non li propongo più
+          continue;
         }
+        $articolo = gaz_dbi_get_row($gTables['artico'], "codice", $rigo['codart']);
+        $form['righi'][$_POST['num_rigo']]['id_rig'] = $rigo['id_rig'];
+        $form['righi'][$_POST['num_rigo']]['tiprig'] = $rigo['tiprig'];
+        $form['righi'][$_POST['num_rigo']]['id_tes'] = $rigo['id_tes'];
+        $form['righi'][$_POST['num_rigo']]['tipdoc'] = $testate['tipdoc'];
+        $form['righi'][$_POST['num_rigo']]['datemi'] = $testate['datemi'];
+        $form['righi'][$_POST['num_rigo']]['numdoc'] = $testate['numdoc'];
+        $form['righi'][$_POST['num_rigo']]['descri'] = $rigo['descri'];
+        $form['righi'][$_POST['num_rigo']]['id_body_text'] = $rigo['id_body_text'];
+        $form['righi'][$_POST['num_rigo']]['codart'] = $rigo['codart'];
+        $form['righi'][$_POST['num_rigo']]['unimis'] = $rigo['unimis'];
+        $form['righi'][$_POST['num_rigo']]['prelis'] = $rigo['prelis'];
+        $form['righi'][$_POST['num_rigo']]['provvigione'] = $rigo['provvigione'];
+        $form['righi'][$_POST['num_rigo']]['ritenuta'] = $rigo['ritenuta'];
+        $form['righi'][$_POST['num_rigo']]['sconto'] = $rigo['sconto'];
+        $form['righi'][$_POST['num_rigo']]['quanti'] = $rigo['quanti'];
+        $form['righi'][$_POST['num_rigo']]['lot_or_serial'] = (isset($articolo['lot_or_serial']))?$articolo['lot_or_serial']:0;
+        $form['righi'][$_POST['num_rigo']]['id_lotmag'] = "";
+        $form['righi'][$_POST['num_rigo']]['cod_operazione'] = 11;
+        $form['righi'][$_POST['num_rigo']]['SIAN'] = (isset($articolo['SIAN']))?$articolo['SIAN']:0;
+        $form['righi'][$_POST['num_rigo']]['quality'] = (isset($articolo['quality']))?$articolo['quality']:'';
+        $form['righi'][$_POST['num_rigo']]['recip_stocc'] = "";
+        if (isset($articolo['SIAN']) AND $articolo['SIAN']>0){
+          $camp_artico = gaz_dbi_get_row($gTables['camp_artico'], "codice", $rigo['codart']);
+          $form['righi'][$_POST['num_rigo']]['confezione'] = $camp_artico['confezione'];
+        } else {
+          $form['righi'][$_POST['num_rigo']]['confezione'] = 0;
+        }
+        $totale_evadibile = $rigo['quanti'];
+        if (!in_array(array($rigo['codart'],$rigo['descri']),$codiciarticoli)) {
+          $codiciarticoli[]=array($rigo['codart'],$rigo['descri']);
+          $evasi = gaz_dbi_get_single_value($gTables['rigdoc'], "SUM(quanti)", "id_order = ".$form['id_tes']." AND codart='".$rigo['codart']."' AND descri LIKE '".addslashes($rigo['descri'])."%' AND tiprig < 900");
+          $totale_evadibile -= $evasi;
+          if ($totale_evadibile == 0 ) {
+            $form['righi'][$_POST['num_rigo']]['checkval'] = false;
+          }
+        }
+        // Antonio Germani - controllo la giacenza in magazzino e gli ordini già ricevuti
+        $mv = $upd_mm->getStockValue(false, $rigo['codart']);
+        $magval = array_pop($mv);
+        $magval=(is_numeric($magval))?['q_g'=>0,'v_g'=>0]:$magval;
+        $form['righi'][$_POST['num_rigo']]['giac'] = $magval['q_g'];
+        $form['righi'][$_POST['num_rigo']]['ordin'] = $upd_mm->get_magazz_ordinati($rigo['codart'], "VOR");
+        $form['righi'][$_POST['num_rigo']]['evaso_in_precedenza'] = $rigo['quanti'] - $totale_evadibile;
+        $form['righi'][$_POST['num_rigo']]['evadibile'] = $totale_evadibile;
+        $form['righi'][$_POST['num_rigo']]['id_doc'] = $rigo['id_doc'];
+        $form['righi'][$_POST['num_rigo']]['codvat'] = $rigo['codvat'];
+        $form['righi'][$_POST['num_rigo']]['pervat'] = $rigo['pervat'];
+        $form['righi'][$_POST['num_rigo']]['codric'] = $rigo['codric'];
+        $_POST['num_rigo'] ++;
+      }
     }
     if (isset($_GET['clfoco'])) { //quando viene caricato un cliente
         $form['clfoco'] = intval($_GET['clfoco']);

@@ -368,7 +368,7 @@ if ((isset($_POST['Insert'])) or ( isset($_POST['Update']))) {   //se non e' il 
         // --- fine controllo coerenza date-numeri
         if (!checkdate($form['mesemi'], $form['gioemi'], $form['annemi']))
             $msg .= "46+";
-        if (empty($form['clfoco'])&& $toDo == 'insert')
+        if (empty($form['clfoco']))
             $msg .= "47+";
         if (empty($form['pagame']))
             $msg .= "48+";

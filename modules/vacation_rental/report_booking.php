@@ -1742,7 +1742,7 @@ $ts->output_navbar();
                   }
                   echo "><i class=\"glyphicon glyphicon-book\" title=\"Stampa contratto PDF\"></i></a>";
 
-                  mostra_addendum($r['id_tes'],$admin_aziend['id']);// se è il caso mostro addendum
+                  mostra_addendum($r['id_tes'],$admin_aziend['company_id']);// se è il caso mostro addendum
 
 
 

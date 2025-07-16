@@ -3157,7 +3157,7 @@ INSERT INTO `gaz_municipalities` (`id`, `id_province`, `name`, `postal_code`, `d
 	(3139, 23, 'Montecchia di Crosara', '37030', '045', '405023049', 'F461', ''),
 	(3140, 23, 'Monteforte d\'Alpone', '37032', '045', '405023050', 'F508', 'https://www.montefortedalpone.org/'),
 	(3141, 23, 'Mozzecane', '37060', '045', '405023051', 'F789', 'https://www.comune.mozzecane.vr.it/'),
-	(3142, 23, 'Negrar', '37024', '045', '023052', 'F861', 'https://www.comunenegrar.it/'),
+	(3142, 23, 'Negrar di Valpolicella', '37024', '045', '405023952', 'F861', 'https://www.comunenegrar.it/'),
 	(3143, 23, 'Nogara', '37054', '0442', '405023053', 'F918', 'https://www.comune.nogara.vr.it/'),
 	(3144, 23, 'Nogarole Rocca', '37060', '045', '405023054', 'F921', 'https://www.nogarolerocca.net/'),
 	(3145, 23, 'Oppeano', '37050', '045', '405023055', 'G080', 'https://www.comune.oppeano.vr.it/'),

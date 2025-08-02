@@ -8060,7 +8060,7 @@ INSERT INTO `gaz_municipalities` (`id`, `id_province`, `name`, `postal_code`, `d
 	(8042, 111, 'Seui', '09064', '0782', '420091081', 'I706', 'https://www.comuneseui.com/'),
 	(8043, 105, 'Talana', '08040', '0782', '420091088', 'L036', 'https://www.comune.talana.nu.it/'),
 	(8044, 105, 'Tertenia', '08047', '0782', '420091089', 'L140', 'https://www.comunetertenia.it/'),
-	(8045, 105, 'Tortolì', '08048', '0782', '105018', 'A355', 'https://www.comuneditortoli.it/'),
+	(8045, 91, 'Tortolì', '08048', '0782', '420091095', 'A355', 'https://www.comuneditortoli.it/'),
 	(8046, 105, 'Triei', '08040', '0782', '420091097', 'L423', ''),
 	(8047, 105, 'Ulassai', '08040', '0782', '420091098', 'L489', ''),
 	(8048, 105, 'Urzulei', '08040', '0782', '420091099', 'L506', ''),

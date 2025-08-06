@@ -309,7 +309,7 @@ if (isset($_POST['preview']) and $msg=='') {
 									$msg .='5+';$er="style='background-color: red';";
 								} else if ($totcont[$mv['recip_stocc']]<0){
 									//echo "<br>",$mv['desdoc'],"ERRORE <",$nr;
-									$message = "Al rigo ".$nr." movimento magazzino ID: ".$mv['id_mov']." la giacenza del silos ".$mv['recip_stocc']." è negativa";
+									$message .= "Al rigo ".$nr." movimento magazzino ID: ".$mv['id_mov']." la giacenza del silos ".$mv['recip_stocc'].' è negativa\n';
 									$msg .='5+';$er="style='background-color: red';";
 								}
 

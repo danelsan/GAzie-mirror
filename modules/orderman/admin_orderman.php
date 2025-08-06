@@ -1603,9 +1603,9 @@ if ($form['order_type'] <> "AGR") { // Se non è produzione agricola
                   $form['id_mov'][$nc]=0;
                 }
                 ?>
-                <input type="hidden" name="lot_idmov' . $nc . '0" value="">
-                <input type="hidden" name="id_mov<?php echo $nc; ?>" value="<?php echo $form['id_mov'][$nc]; ?>">
-                <input type="hidden" name="id_lot_comp' . $nc . '0" value="">
+                <input type="hidden" name="lot_idmov<?php echo $nc; ?>" value="">
+                <input type="hidden" name="id_mov<?php echo $nc; ?>" value="">
+                <input type="hidden" name="id_lot_comp<?php echo $nc?>" value="">
                 <input type="hidden" name="q_lot_comp<?php echo $nc; ?>" value=""> <!--// non ci sono lotti per questo componente-->
                 <?php
 

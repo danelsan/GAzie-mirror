@@ -305,11 +305,12 @@ if (isset($_POST['preview']) and $msg=='') {
 								$totcont[$mv['recip_stocc']] -= floatval($mv['quanti']);
 								//echo "<br><br>PRODUZIONE SCarico fusto ",$mv['recip_stocc']," di:",$mv['quanti']," totale recipiente:",$totcont[$mv['recip_stocc']]," - datdoc:",$mv['datdoc'];
                 if (strlen($mv['recip_stocc']) < 1 ){
-									$message .= 'Rigo '.$nr.', movimento di magazzino con ID '.$mv['id_mov'].' non ha il silos sul movimento SIAN ID '.$mv['id_mov_sian'].'\n';
+									$message .= 'Rigo '.$nr.', movimento di magazzino '.$mv['id_mov'].' non ha il silos sul movimento SIAN ID '.$mv['id_mov_sian'].($mv['id_orderman']>0?', Produzione N.'.$mv['id_orderman']:'').($mv['id_lotmag']>0?', Lotto ID:'.$mv['id_lotmag']:'').'\n';
 									$msg .='5+';$er="style='background-color: red';";
 								} else if ($totcont[$mv['recip_stocc']]<0){
 									//echo "<br>",$mv['desdoc'],"ERRORE <",$nr;
-									$message .= "Rigo ".$nr.", movimento magazzino ID: ".$mv['id_mov']." la giacenza del silos ".$mv['recip_stocc'].' è negativa\n';
+									$message .= "Rigo ".$nr.", movimento magazzino ".$mv['id_mov']." la giacenza del silos ".$mv['recip_stocc'].' è negativa '.($mv['id_orderman']>0?', Produzione N.'.$mv['id_orderman']:'').($mv['id_lotmag']>0?', Lotto ID:'.$mv['id_lotmag']:'').'\n';
+
 									$msg .='5+';$er="style='background-color: red';";
 								}
 

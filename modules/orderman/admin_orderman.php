@@ -464,13 +464,13 @@ if ((isset($_POST['Insert'])) || (isset($_POST['Update']))){ // se NON è il pri
               gaz_dbi_del_row($gTables['camp_mov_sian'], "id_movmag", $r['id_mov']);// cancello i relativi movimenti SIAN
             }
 
-			if (intval($res['clfoco'])==0) { // se NON è un ordine cliente esistente e quindi fu generato automaticamente da orderman
-			$result = gaz_dbi_del_row($gTables['tesbro'], "id_tes", $form['id_tesbro']); // cancello tesbro
-			$result = gaz_dbi_del_row($gTables['rigbro'], "id_tes", $form['id_tesbro']); // cancello rigbro
-			$form['order']=0;
-			} else { // se invece è un ordine cliente devo lasciarlo e solo sganciarlo da orderman
-			gaz_dbi_query ("UPDATE " . $gTables['tesbro'] . " SET id_orderman = '' WHERE id_tes ='".$form['id_tesbro']."'") ; // sgancio tesbro da orderman
-			}
+            if (intval($res['clfoco'])==0) { // se NON è un ordine cliente esistente e quindi fu generato automaticamente da orderman
+            $result = gaz_dbi_del_row($gTables['tesbro'], "id_tes", $form['id_tesbro']); // cancello tesbro
+            $result = gaz_dbi_del_row($gTables['rigbro'], "id_tes", $form['id_tesbro']); // cancello rigbro
+            $form['order']=0;
+            } else { // se invece è un ordine cliente devo lasciarlo e solo sganciarlo da orderman
+            gaz_dbi_query ("UPDATE " . $gTables['tesbro'] . " SET id_orderman = '' WHERE id_tes ='".$form['id_tesbro']."'") ; // sgancio tesbro da orderman
+            }
 
             // in ogni caso riporto l'auto_increment all'ultimo valore disponibile
             $query="SELECT max(id)+1 AS li FROM ".$gTables['orderman'];
@@ -520,16 +520,16 @@ if ((isset($_POST['Insert'])) || (isset($_POST['Update']))){ // se NON è il pri
           // inserisco orderman: l'attuale produzione
             $form['start_work']=$start_work; $form['end_work']=$end_work; $form['id_tesbro']=(isset($id_tesbro))?$id_tesbro:0; $form['stato_lavorazione']=$status; $form['adminid']=$admin_aziend['adminid']; $form['duration']=$form['day_of_validity'];
 
-			if (isset($_GET['codice']) && intval($_GET['codice'])>0){// se è un update aggiorno rigo orderman
-				$id_orderman=intval($_GET['codice']);
-				$update = array();
-				$update[]="id";
-				$update[]=$id_orderman;
-				gaz_dbi_table_update('orderman', $update , $form);
-			}else{// se è insert
+            if (isset($_GET['codice']) && intval($_GET['codice'])>0){// se è un update aggiorno rigo orderman
+              $id_orderman=intval($_GET['codice']);
+              $update = array();
+              $update[]="id";
+              $update[]=$id_orderman;
+              gaz_dbi_table_update('orderman', $update , $form);
+            }else{// se è insert
 
-				$id_orderman = gaz_dbi_table_insert('orderman', $form);
-			}
+              $id_orderman = gaz_dbi_table_insert('orderman', $form);
+            }
             if (isset($id_tesbro)){// connetto tesbro a orderman
               tesbroUpdate(array('id_tes',$id_tesbro), array('id_orderman'=>$id_orderman));
             }
@@ -618,7 +618,12 @@ if ((isset($_POST['Insert'])) || (isset($_POST['Update']))){ // se NON è il pri
                         $form['id_mov_sian_rif']=$id_mov_sian_rif; // connetto il mov sian del componente a quello del prodotto
                         $form['recip_stocc']=$form['recip_stocc_comp'][$nc];
                         gaz_dbi_query("UPDATE " . $gTables['camp_mov_sian'] . " SET recip_stocc = '" . $form['recip_stocc'] . "' WHERE id_mov_sian ='" . $id_mov_sian_rif . "'"); // aggiorno id_lotmag sul movmag
-                        $form['cod_operazione']="";
+                        if ($form['cod_operazione']==3){
+                          // Nel caso di sola etichettatura, il contenitore è già quello finale per la vendita, cioè non è un recipiente di stoccagio ai fini dei movimenti SIAN
+                          // quindi, mantenendo il codice operazione 3 anche nel movimento in uscita, evito il controllo del recipiente di stoccaggio in fase di creazione file di upload Sian
+                        }else{
+                          $form['cod_operazione']="";
+                        }
                         $var_orig=$campsilos->getContentSil($form['recip_stocc'],$date="",$id_mov=0);
                         unset($var_orig['varieta']['totale']);//tolgo il totale
                         if (isset($var_orig) && $block_var!=="SI"){
@@ -640,7 +645,12 @@ if ((isset($_POST['Insert'])) || (isset($_POST['Update']))){ // se NON è il pri
                     $form['id_mov_sian_rif']=$id_mov_sian_rif;// connetto il mov sian del componente a quello del prodotto
                     $form['recip_stocc']=$form['recip_stocc_comp'][$nc];
                     gaz_dbi_query("UPDATE " . $gTables['camp_mov_sian'] . " SET recip_stocc = '" . $form['recip_stocc'] . "' WHERE id_mov_sian ='" . $id_mov_sian_rif . "'"); // aggiorno id_lotmag sul movmag
-                    $form['cod_operazione']="";
+                    if ($form['cod_operazione']==3){
+                      // Nel caso di sola etichettatura, il contenitore è già quello finale per la vendita, cioè non è un recipiente di stoccagio ai fini dei movimenti SIAN
+                      // quindi, mantenendo il codice operazione 3 anche nel movimento in uscita, evito il controllo del recipiente di stoccaggio in fase di creazione file di upload Sian
+                    }else{
+                      $form['cod_operazione']="";
+                    }
                     $var_orig=$campsilos->getContentSil($form['recip_stocc'],$date="",$id_mov=0);
                     unset($var_orig['varieta']['totale']);//tolgo il totale
                     if (isset($var_orig) && $block_var!=="SI"){

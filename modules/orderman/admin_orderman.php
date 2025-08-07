@@ -1540,6 +1540,7 @@ if ($form['order_type'] <> "AGR") { // Se non è produzione agricola
                         $selected_lot = $lm->getLot($form['id_lot_comp'][$nc][$l]);
                       }
                       $disp= $lm -> dispLotID ($artico['codice'], $selected_lot['id'],(isset($form['lot_idmov'][$nc][$l]))?$form['lot_idmov'][$nc][$l]:0);
+                      $disp = (is_null($disp))?'':$disp;
                       echo '<button class="btn btn-xs btn-success"  title="Lotto selezionato automaticamente" data-toggle="collapse" href="#lm_dialog' . $nc . $l.'">' . $selected_lot['id'] . ' Lotto n.: ' . $selected_lot['identifier'];
                       if (intval($selected_lot['expiry'])>0){
                         echo ' Scadenza: ' . gaz_format_date($selected_lot['expiry']);

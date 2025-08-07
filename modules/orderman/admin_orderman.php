@@ -535,7 +535,7 @@ if ((isset($_POST['Insert'])) || (isset($_POST['Update']))){ // se NON è il pri
             }
 
             //
-            // scrittura movimento di magazzino MOVMAG carico dell'articolo prodotto
+            // scrittura movimento CARICO di magazzino movmag dell'articolo prodotto
             if ($form['order_type'] == "IND") {
               $mv = $magazz->getStockValue(false, $form['codart'], null, null, $admin_aziend['decimal_price']);
               $price=(isset($mv['v']))?$mv['v']:0;
@@ -566,6 +566,7 @@ if ((isset($_POST['Insert'])) || (isset($_POST['Update']))){ // se NON è il pri
                 }elseif ($block_var!=="SI") {
                   $form['varieta']=$form['quality'];
                 }
+                $form['id_mov_sian_rif']=""; // il carico non deve avere il riferimento. E' solo lo scarico che si riferisce al carico
                 $id_mov_sian_rif=gaz_dbi_table_insert('camp_mov_sian', $form);
                 $s7=""; // Si sta producendo olio
               } else {

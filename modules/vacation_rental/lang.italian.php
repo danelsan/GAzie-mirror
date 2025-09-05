@@ -939,6 +939,7 @@ $strScript = array(
         'born_missing' => 'Compilare tutti campi: data di nascita',
         'citizenship' => 'Cittadinanza',
         'coucard' => 'Stato di rilascio documento',
+        'coures' => 'Stato di residenza',
         'loccard' => 'Località di rilascio',
         'no_parent' => 'Non è presente nessun genitore',
         'load_aut' => 'Carica l\'autorizzazione del genitore',

@@ -352,12 +352,14 @@ function get_totalprice_booking($tesbro,$tourist_tax=TRUE,$vat=FALSE,$preeminent
 
     if ($vat==FALSE){// devo restituire l'imponibile
 
-     // 3/7/25 corretta perché non prendeva lo sconto // $sql = "SELECT SUM(quanti * prelis) AS totalprice FROM ".$tablerig." LEFT JOIN ".$tableart." ON (".$tablerig.".codart = ".$tableart.".codice) OR (".$tablerig.".codart = ".$tableart.".codice AND ".$tablerig.".codice_fornitore = ".$tableart.".codice) ".$on." ".$where;
-	 $sql = "SELECT SUM(".$tablerig.".quanti * ".$tablerig.".prelis) AS totalprice FROM ".$tablerig." LEFT JOIN ".$tableart." ON (".$tablerig.".codart = ".$tableart.".codice) OR (".$tablerig.".codice_fornitore = ".$tableart.".codice) ".$on." ".$where;
-	  //echo $sql;
+		// 3/7/25 corretta perché non prendeva lo sconto // $sql = "SELECT SUM(quanti * prelis) AS totalprice FROM ".$tablerig." LEFT JOIN ".$tableart." ON (".$tablerig.".codart = ".$tableart.".codice) OR (".$tablerig.".codart = ".$tableart.".codice AND ".$tablerig.".codice_fornitore = ".$tableart.".codice) ".$on." ".$where;
+		//$sql = "SELECT SUM(".$tablerig.".quanti * ".$tablerig.".prelis) AS totalprice FROM ".$tablerig." LEFT JOIN ".$tableart." ON (".$tablerig.".codart = ".$tableart.".codice) OR (".$tablerig.".codice_fornitore = ".$tableart.".codice) ".$on." ".$where;
+		// 6/9/25 Corretta perché prendeva due volte la tassa turistica
+		$sql = "SELECT SUM(COALESCE(r.quanti, 0) * COALESCE(r.prelis, 0)) AS totalprice FROM ".$tablerig." r LEFT JOIN ".$tableart." a ON a.codice = CASE WHEN r.codart IS NOT NULL AND r.codart != '' THEN r.codart WHEN r.codice_fornitore IS NOT NULL AND r.codice_fornitore != '' THEN r.codice_fornitore ELSE NULL END ".$on." ".$where;
+		//echo $sql;
       if ($result = mysqli_query($link, $sql)) {
          $row = mysqli_fetch_assoc($result);
-			//echo "<br> devo rest imponibile per rows:<pre>",print_r($row),"</pre>";die;
+			//echo "<br> devo rest imponibile per rows:<pre>",print_r($row),"</pre>";//die;
           $sql = "SELECT speban FROM ".$tabletes." WHERE id_tes = ".intval($tesbro)." LIMIT 1";
           if ($result = mysqli_query($link, $sql)) {
             $rowtes = mysqli_fetch_assoc($result);
@@ -375,12 +377,13 @@ function get_totalprice_booking($tesbro,$tourist_tax=TRUE,$vat=FALSE,$preeminent
       $sql = "SELECT ".$tablerig.".quanti, ".$tablerig.".prelis, ".$tableiva.".aliquo, ".$tableart.".codice FROM ".$tablerig." LEFT JOIN ".$tableiva." ON ".$tableiva.".codice = ".$tablerig.".codvat "." LEFT JOIN ".$tableart." ON ".$tablerig.".codart = ".$tableart.".codice ".$where;
       $totalprice=0;$totalsecdep=0;
 	  //echo "<br> sql:",$sql;
+	  //echo "<br> devo restituire IVA compresa";
       if ($result = mysqli_query($link, $sql)) {
-
+		//echo "<br>Ciclo i righi del db";
         foreach ($result as $res){
           //echo"<pre>",print_r($res),"</pre>";
           $totalprice += ($res['prelis']*$res['quanti'])+((($res['prelis']*$res['quanti'])*$res['aliquo'])/100);
-
+			//echo "Total price aggiornato:",$totalprice;
           if ($security_deposit==TRUE){
             // controllo se il rigo è un alloggio
             //echo "<br>Aggiungo deposito cauzionale";
@@ -422,11 +425,11 @@ function get_totalprice_booking($tesbro,$tourist_tax=TRUE,$vat=FALSE,$preeminent
           $rowtes = mysqli_fetch_assoc($result);
           $rowtes['speban']=(isset($rowtes['speban']))?$rowtes['speban']:0;
           $rowtes['speban'] = $rowtes['speban']+(($rowtes['speban']*$spevat)/100);
-          $totalprice= $totalprice+$rowtes['speban'];// aggiungo eventuali spese bancarie
-          return  $totalprice+$totalsecdep;
+          $totalprice= $totalprice+$rowtes['speban'];// aggiungo eventuali spese bancarie          
         }else{
-          echo "Error: " . $sql . "<br>" . mysqli_error($link);
+          echo "Error: " . $sql . "<br>" . mysqli_error($link);die;
         }
+		return  $totalprice+$totalsecdep;
       }else {
          echo "Error: " . $sql . "<br>" . mysqli_error($link);
       }

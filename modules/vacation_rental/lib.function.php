@@ -333,11 +333,11 @@ function get_totalprice_booking($tesbro,$tourist_tax=TRUE,$vat=FALSE,$preeminent
     $where = " WHERE (id_tes = '".$tesbro."'";
 	$on="";
     if ($tourist_tax == TRUE && $add_extra==FALSE){// se richiesta la tassa turistica ma esclusi gli extra
-      $where .= " AND (codart LIKE 'TASSA-TURISTICA%' OR (".$tableart.".custom_field REGEXP 'accommodation_type'))";
+		$where .= " AND (codart LIKE 'TASSA-TURISTICA%' OR (a.custom_field REGEXP 'accommodation_type'))";
 
     }
     if ($add_extra==FALSE && $tourist_tax == FALSE){// escludo gli extra ma anche la tassa turistica
-      $where .= " AND (".$tableart.".custom_field REGEXP 'accommodation_type') AND codart NOT LIKE 'TASSA-TURISTICA%'";
+		$where .= " AND (a.custom_field REGEXP 'accommodation_type') AND codart NOT LIKE 'TASSA-TURISTICA%'";
       //$on="AND ".$tablerig.".codart NOT LIKE 'TASSA-TURISTICA'";
     }
     if ($tourist_tax == TRUE && $add_extra==TRUE){// se richiesta la tassa turistica e gli extra

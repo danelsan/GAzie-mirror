@@ -31,7 +31,7 @@
 
 function iCalDecoder($file) {
     $ical = @file_get_contents($file);
-    preg_match_all('/(BEGIN:VEVENT.*?END:VEVENT)/si', $ical, $result, PREG_PATTERN_ORDER);
+	preg_match_all('/BEGIN:VEVENT(.*?)END:VEVENT/si', $ical, $result, PREG_PATTERN_ORDER);
     for ($i = 0; $i < count($result[0]); $i++) {
       $tmpbyline = explode("\r\n", $result[0][$i]);
       if (count($tmpbyline)<3){// se non sono riuscito a separare i righi con \r\n
@@ -258,46 +258,90 @@ function get_lang_translation($ref, $table, $lang_id){// nuovo sistema traduzion
 }
 
 // calcolo dei giorni da pagare per la tassa turistica fra due date specifiche
-function tour_tax_daytopay($night,$start,$end,$tour_tax_from,$tour_tax_to,$tour_tax_day=0){
-  $tour_tax_from=$tour_tax_from."-".date("Y", strtotime($start)); // aggiungo l'anno all'inizio pagamento tassa turistica
-  $tour_tax_to=$tour_tax_to."-".date("Y", strtotime($start)); // aggiungo l'anno alla fine pagamento tassa turistica
+function tour_tax_daytopay($start, $end, $tour_tax_from, $tour_tax_to, $tour_tax_day = 0, $full_start = null, $full_end = null) {
+    $year = date("Y", strtotime($start));
+	$from_parts = explode('-', $tour_tax_from); // es: ['15', '12']
+	$to_parts   = explode('-', $tour_tax_to);   // es: ['15', '01']
 
-  $daytopay=intval($night);
-  if (strtotime($tour_tax_from)){// se è stato impostato un periodo specifico per la tassa turistica
+	$from_date = new DateTime("$year-{$from_parts[1]}-{$from_parts[0]}");
+	$to_date   = new DateTime("$year-{$to_parts[1]}-{$to_parts[0]}");
 
-    if (strtotime($start)>= strtotime($tour_tax_from) && strtotime($start)<= strtotime($tour_tax_to)){// se la data di inizio è dentro al periodo tassa turistica
+	// Se to < from, vuol dire che to è nel gennaio dell’anno successivo
+	if ($to_date < $from_date) {
+		$to_date->modify('+1 year');
+	}
 
-     if (strtotime($end) > strtotime($tour_tax_to)){// se la fine prenotazione va fuori dal periodo tassa turistica
-         $diff=date_diff(date_create($tour_tax_to),date_create($start));
+	$tour_tax_from = $from_date->format('Y-m-d');
+	$tour_tax_to   = $to_date->format('Y-m-d');
+	
+	
+	$night = (new DateTime($start))->diff(new DateTime($end))->days;
+    $daytopay = intval($night); // default: tutte le notti si pagano, se non c'è un periodo specifico
 
-         $daytopay= $diff->format("%a");
+    if (strtotime($tour_tax_from)) { // Se c'è un periodo specifico per la tassa
+        $start_date = new DateTime($start);
+        $end_date = new DateTime($end);
+        $tax_start = new DateTime($tour_tax_from);
+        $tax_end = new DateTime($tour_tax_to);
 
-      }else{// se la fine prenotazione è dentro al periodo tassa turistica
-        $diff=date_diff(date_create($end),date_create($start));
-        $daytopay= $diff->format("%a");
-      }
-    }else{// se la data di inizio è fuori dal periodo tassa turistica
-      if (strtotime($end) >= strtotime($tour_tax_from) AND strtotime($end)<= strtotime($tour_tax_to)){// se la fine prenotazione è dentro al periodo tassa turistica
-        $diff=date_diff(date_create($end),date_create($tour_tax_from));
-        $daytopay= $diff->format("%a");
+        $interval = new DateInterval('P1D');
+        $period = new DatePeriod($start_date, $interval, $end_date);
 
-      }else{// se la fine è fuori al periodo tassa turistica
-        if (strtotime($start) < strtotime($tour_tax_from) && strtotime($end) > strtotime($tour_tax_to)){// se la prenotazione è a cavallo, cioè ingloba il periodo
-          $diff=date_diff(date_create($tour_tax_to),date_create($tour_tax_from));// paga per il periodo della tassa turistica
-          $daytopay= $diff->format("%a");
-        }else{// se è fuori non paga nulla
-          $daytopay=0;
+        $count = 0;
+        foreach ($period as $night_date) {
+            if ($night_date >= $tax_start && $night_date <= $tax_end) {
+                $count++;
+            }
         }
-      }
+
+        $daytopay = $count; // sovrascrivo solo se c'è un periodo valido
     }
-  }
+	
+	// ** LOGICA PER IL CALCOLO STATISTICO **
+    // Se viene passato anche il periodo completo locazione, controllo se start e end 
+    // rientrano nelle prime tour_tax_day notti dalla locazione completa.
+   if (strtotime($tour_tax_from) && strtotime($tour_tax_to) && $full_start !== null && $full_end !== null && intval($tour_tax_day) > 0) {
+		$full_start_dt = new DateTime($full_start);
+		$full_end_dt = new DateTime($full_end);
+		$start_dt = new DateTime($start);
+		$end_dt = new DateTime($end);
+		$tax_start = new DateTime($tour_tax_from);
+		$tax_end = new DateTime($tour_tax_to);
 
-  if (intval($tour_tax_day) >0 && intval($daytopay) > intval($tour_tax_day)){// se è stato impostato un numero massimo di giorni e i giorni da pagare sono di più di quelli pagabili, li riduco
-    $daytopay=$tour_tax_day;
-  }
+		// Iteriamo l'intero soggiorno (full_start → full_end), ma consideriamo solo i giorni nel periodo tassa
+		$interval = new DateInterval('P1D');
+		$full_period = new DatePeriod($full_start_dt, $interval, $full_end_dt);
 
-  return $daytopay;
+		$tassabili = [];
+		foreach ($full_period as $d) {
+			if ($d >= $tax_start && $d <= $tax_end) {
+				$tassabili[] = $d->format('Y-m-d');
+			}
+		}
+
+		// Prendiamo solo le prime X notti tassabili
+		$tassabili_limitate = array_slice($tassabili, 0, intval($tour_tax_day));
+
+		// Ora verifichiamo se $start (giorno singolo, nel caso statistico) rientra in quelle notti tassabili
+		$giorno_analizzato = $start_dt->format('Y-m-d');
+
+		if (in_array($giorno_analizzato, $tassabili_limitate)) {
+			$daytopay = 1;
+		} else {
+			$daytopay = 0;
+		}
+	}
+
+
+    // Applico limite massimo di notti da pagare 
+    if (intval($tour_tax_day) > 0 && $daytopay > intval($tour_tax_day)) {
+        $daytopay = intval($tour_tax_day);
+    }
+	
+
+    return $daytopay;
 }
+
 
 // calcolo totale della locazione
 function get_totalprice_booking($tesbro,$tourist_tax=TRUE,$vat=FALSE,$preeminent_vat="",$add_extra=FALSE,$security_deposit=FALSE){// security_deposit viene calcolato, se TRUE, solo se il totale deve essere iva compresa +++ preeminent vat serve solo per calcolare l'iva sulle eventuali spese se è nulla le spese vanno senza iva

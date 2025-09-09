@@ -376,45 +376,73 @@ if (isset($_GET['anteprima']) and $msg == "") {
 
                     if (isset($custom_field['vacation_rental']['tur_tax_mode']) && intval($tour_tax_day_count) <= intval($tour_tax_day)){
 						//echo "<br>calcolo importo tassa giornaliera. day count=",intval($tour_tax_day_count)," - giorni massimi pagamento:",intval($tour_tax_day);
-                      $tour_tax_day_count += $daytopay;
-                      // calcolo prezzo tassa turistica
-                      switch ($custom_field['vacation_rental']['tur_tax_mode']) {//0 => 'a persona', '1' => 'a persona escluso i minori', '2' => 'a notte', '3' => 'a notte escluso i minori'
-                        case "0":
-                          $count[$facil][$month]['tot_turtax'] +=floatval($custom_field['vacation_rental']['tur_tax'])*(intval($row['adult'])+intval($row['child']));
-                          (isset($count[$facil][$month]['presenze']))?$count[$facil][$month]['presenze'] += (intval($row['adult'])+intval($row['child'])):$count[$facil][$month]['presenze'] = (intval($row['adult'])+intval($row['child']));
-                          $presenze_turtax_memo[$month] += (intval($row['adult'])+intval($row['child']));
-                          break;
-                        case "1":
-                          $count[$facil][$month]['tot_turtax'] +=floatval($custom_field['vacation_rental']['tur_tax'])*(intval($row['adult']));
-                          (isset($count[$facil][$month]['presenze']))?$count[$facil][$month]['presenze'] += intval($row['adult']):$count[$facil][$month]['presenze'] = intval($row['adult']);
-                          $presenze_turtax_memo[$month] += (intval($row['adult']));
-                          break;
-                        case "2":
-                          if (isset($count[$facil][$month]['daytopay'])){
-                          $count[$facil][$month]['tot_turtax'] +=(floatval($custom_field['vacation_rental']['tur_tax'])*(intval($daytopay)))*(intval($row['adult'])+intval($row['child']));
-                          $tot_turtax_memo[$month] += (floatval($custom_field['vacation_rental']['tur_tax'])*(intval($daytopay)))*(intval($row['adult'])+intval($row['child']));
-                          $presenze_turtax_memo[$month] += (intval($row['adult'])+intval($row['child']));
-                          }else{
+						$tour_tax_day_count += $daytopay;
+						// calcolo prezzo tassa turistica
+						switch ($custom_field['vacation_rental']['tur_tax_mode']) {
+							// 0 => 'a persona'
+							case "0":
+								$count[$facil][$month]['tot_turtax'] += floatval($custom_field['vacation_rental']['tur_tax']) * (intval($row['adult']) + intval($row['child']));
+								if (isset($count[$facil][$month]['presenze'])) {
+									$count[$facil][$month]['presenze'] += (intval($row['adult']) + intval($row['child']));
+								} else {
+									$count[$facil][$month]['presenze'] = (intval($row['adult']) + intval($row['child']));
+								}
+								$presenze_turtax_memo[$month] += (intval($row['adult']) + intval($row['child']));
+								break;
 
-                          }
-                          (isset($count[$facil][$month]['presenze']))?$count[$facil][$month]['presenze'] += (intval($row['adult'])+intval($row['child'])):$count[$facil][$month]['presenze'] = (intval($row['adult'])+intval($row['child']));
-                          break;
-                        case "3":
-                          if (isset($count[$facil][$month]['daytopay'])){
-                            $count[$facil][$month]['tot_turtax'] +=(floatval($custom_field['vacation_rental']['tur_tax'])*(intval($daytopay)))*(intval($row['adult']));
-                            $tot_turtax_memo[$month] += (floatval($custom_field['vacation_rental']['tur_tax'])*(intval($daytopay)))*(intval($row['adult']));
-                            $presenze_turtax_memo[$month] += intval($row['adult']);
-                            (isset($count[$facil][$month]['presenze']))?$count[$facil][$month]['presenze'] += intval($row['adult']):$count[$facil][$month]['presenze'] = intval($row['adult']);
-							//echo "<br>A notte escluso i minori - mese:",$month," - contatore tassa per questa struttura importo:",$count[$facil][$month]['tot_turtax'];
-							//echo "<br> - tur tax giornaliera euro:",floatval($custom_field['vacation_rental']['tur_tax'])," - contatore conteggio giorni da pagare per struttura:",intval($count[$facil][$month]['daytopay'])," - adulti che pagano:",intval($row['adult'])," - giorni pagati per questo rigo locazione:",$daytopay;
-                          }else{
+							// 1 => 'a persona escluso i minori'
+							case "1":
+								$count[$facil][$month]['tot_turtax'] += floatval($custom_field['vacation_rental']['tur_tax']) * intval($row['adult']);
+								if (isset($count[$facil][$month]['presenze'])) {
+									$count[$facil][$month]['presenze'] += intval($row['adult']);
+								} else {
+									$count[$facil][$month]['presenze'] = intval($row['adult']);
+								}
+								$presenze_turtax_memo[$month] += intval($row['adult']);
+								break;
 
-                          }
-                          break;
-                        case "4":
-                          $count[$facil][$month]['tot_turtax'] +=$custom_field['vacation_rental']['tur_tax'];
-                          break;
-                      }
+							// 2 => 'a notte'
+							case "2":
+								if (isset($count[$facil][$month]['daytopay'])) {
+									$totale_tassa = floatval($custom_field['vacation_rental']['tur_tax']) * intval($daytopay) * (intval($row['adult']) + intval($row['child']));
+									$count[$facil][$month]['tot_turtax'] += $totale_tassa;
+									$tot_turtax_memo[$month] += $totale_tassa;
+
+									$presenze_correnti = (intval($row['adult']) + intval($row['child'])) * intval($daytopay);
+									$presenze_turtax_memo[$month] += $presenze_correnti;
+
+									if (isset($count[$facil][$month]['presenze'])) {
+										$count[$facil][$month]['presenze'] += $presenze_correnti;
+									} else {
+										$count[$facil][$month]['presenze'] = $presenze_correnti;
+									}
+								}
+								break;
+
+							// 3 => 'a notte escluso i minori'
+							case "3":
+								if (isset($count[$facil][$month]['daytopay'])) {
+									$totale_tassa = floatval($custom_field['vacation_rental']['tur_tax']) * intval($daytopay) * intval($row['adult']);
+									$count[$facil][$month]['tot_turtax'] += $totale_tassa;
+									$tot_turtax_memo[$month] += $totale_tassa;
+
+									$presenze_correnti = intval($row['adult']) * intval($daytopay);
+									$presenze_turtax_memo[$month] += $presenze_correnti;
+
+									if (isset($count[$facil][$month]['presenze'])) {
+										$count[$facil][$month]['presenze'] += $presenze_correnti;
+									} else {
+										$count[$facil][$month]['presenze'] = $presenze_correnti;
+									}
+								}
+								break;
+
+							// 4 => tassa fissa (?)
+							case "4":
+								$count[$facil][$month]['tot_turtax'] += $custom_field['vacation_rental']['tur_tax'];
+								break;
+						}
+
                     }
                   }
                   $currentDate = strtotime("+1 day", $currentDate);

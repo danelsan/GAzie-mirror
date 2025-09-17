@@ -344,145 +344,152 @@ function tour_tax_daytopay($start, $end, $tour_tax_from, $tour_tax_to, $tour_tax
 
 
 // calcolo totale della locazione
-function get_totalprice_booking($tesbro,$tourist_tax=TRUE,$vat=FALSE,$preeminent_vat="",$add_extra=FALSE,$security_deposit=FALSE){// security_deposit viene calcolato, se TRUE, solo se il totale deve essere iva compresa +++ preeminent vat serve solo per calcolare l'iva sulle eventuali spese se è nulla le spese vanno senza iva
-  if ($tesbro!==''){
-    $tesbro=intval($tesbro);
-    global $link, $azTables, $gTables;// posso chiamare la funzione con entrambi i metodi
-    if ($azTables){
-      $tablerig = $azTables."rigbro";
-      $tabletes = $azTables."tesbro";
-      $tableiva = $azTables."aliiva";
-      $tableaz = $azTables."aziend";
-      $tableart = $azTables."artico";
-    }else{
-      $tablerig = $gTables['rigbro'];
-      $tabletes = $gTables['tesbro'];
-      $tableiva = $gTables['aliiva'];
-      $tableaz = $gTables['aziend'];
-      $tableart = $gTables['artico'];
-    }
-    $sql = "SELECT custom_field FROM ".$tabletes." WHERE id_tes = ".intval($tesbro)." LIMIT 1";
-    if ($result = mysqli_query($link, $sql)) {
-      $rowtesbf = mysqli_fetch_assoc($result);
-      if (isset($rowtesbf['custom_field']) && ($data_tesbro = json_decode($rowtesbf['custom_field'],true))){// prendo custom field tesbro
-        if (isset($data_tesbro['vacation_rental']['security_deposit'])){// se è stato impostato il deposito in tesbro (retrocompatibilità) lo prendo
-          $security_deposit_val=$data_tesbro['vacation_rental']['security_deposit'];
-        }else{
-          $security_deposit_val=-1;
+function get_totalprice_booking($tesbro, $tourist_tax = TRUE, $vat = FALSE, $preeminent_vat = "", $add_extra = FALSE, $security_deposit = FALSE) {
+    if ($tesbro !== '') {
+        $tesbro = intval($tesbro);
+        global $link, $azTables, $gTables;
+
+        if ($azTables) {
+            $tablerig = $azTables . "rigbro";
+            $tabletes = $azTables . "tesbro";
+            $tableiva = $azTables . "aliiva";
+            $tableaz = $azTables . "aziend";
+            $tableart = $azTables . "artico";
+        } else {
+            $tablerig = $gTables['rigbro'];
+            $tabletes = $gTables['tesbro'];
+            $tableiva = $gTables['aliiva'];
+            $tableaz = $gTables['aziend'];
+            $tableart = $gTables['artico'];
         }
-      }else{
-        $security_deposit_val=-1;
-      }
-    }
-    $where = " WHERE (id_tes = '".$tesbro."'";
-	$on="";
-    if ($tourist_tax == TRUE && $add_extra==FALSE){// se richiesta la tassa turistica ma esclusi gli extra
-		$where .= " AND (codart LIKE 'TASSA-TURISTICA%' OR (a.custom_field REGEXP 'accommodation_type'))";
 
-    }
-    if ($add_extra==FALSE && $tourist_tax == FALSE){// escludo gli extra ma anche la tassa turistica
-		$where .= " AND (a.custom_field REGEXP 'accommodation_type') AND codart NOT LIKE 'TASSA-TURISTICA%'";
-      //$on="AND ".$tablerig.".codart NOT LIKE 'TASSA-TURISTICA'";
-    }
-    if ($tourist_tax == TRUE && $add_extra==TRUE){// se richiesta la tassa turistica e gli extra
-      $where .= "";
+        // Leggo il deposito cauzionale da tesbro
+        $sql = "SELECT custom_field FROM " . $tabletes . " WHERE id_tes = " . $tesbro . " LIMIT 1";
+        $security_deposit_val = -1;
 
-    }
-     if ($tourist_tax == FALSE && $add_extra==TRUE){// se richiesti solo gli extra
-      $where .= " AND codart NOT LIKE 'TASSA-TURISTICA%'";
-      //$on="AND ".$tablerig.".codart NOT LIKE 'TASSA-TURISTICA'";
-    }
-	$where .=")";
-
-    if ($vat==FALSE){// devo restituire l'imponibile
-
-		// 3/7/25 corretta perché non prendeva lo sconto // $sql = "SELECT SUM(quanti * prelis) AS totalprice FROM ".$tablerig." LEFT JOIN ".$tableart." ON (".$tablerig.".codart = ".$tableart.".codice) OR (".$tablerig.".codart = ".$tableart.".codice AND ".$tablerig.".codice_fornitore = ".$tableart.".codice) ".$on." ".$where;
-		//$sql = "SELECT SUM(".$tablerig.".quanti * ".$tablerig.".prelis) AS totalprice FROM ".$tablerig." LEFT JOIN ".$tableart." ON (".$tablerig.".codart = ".$tableart.".codice) OR (".$tablerig.".codice_fornitore = ".$tableart.".codice) ".$on." ".$where;
-		// 6/9/25 Corretta perché prendeva due volte la tassa turistica
-		$sql = "SELECT SUM(COALESCE(r.quanti, 0) * COALESCE(r.prelis, 0)) AS totalprice FROM ".$tablerig." r LEFT JOIN ".$tableart." a ON a.codice = CASE WHEN r.codart IS NOT NULL AND r.codart != '' THEN r.codart WHEN r.codice_fornitore IS NOT NULL AND r.codice_fornitore != '' THEN r.codice_fornitore ELSE NULL END ".$on." ".$where;
-		//echo $sql;
-      if ($result = mysqli_query($link, $sql)) {
-         $row = mysqli_fetch_assoc($result);
-			//echo "<br> devo rest imponibile per rows:<pre>",print_r($row),"</pre>";//die;
-          $sql = "SELECT speban FROM ".$tabletes." WHERE id_tes = ".intval($tesbro)." LIMIT 1";
-          if ($result = mysqli_query($link, $sql)) {
-            $rowtes = mysqli_fetch_assoc($result);
-            $rowtes['speban']=(isset($rowtes['speban']))?$rowtes['speban']:0;
-            $totalprice= $row['totalprice']+$rowtes['speban'];// aggiungo eventuali spese bancarie
-             return  $totalprice;
-          }else{
-            echo "Error: " . $sql . "<br>" . mysqli_error($link);
-          }
-      }else {
-         echo "Error: " . $sql . "<br>" . mysqli_error($link);
-      }
-    }else{// devo restituire iva compresa
-		$where .= " OR (id_tes = '".$tesbro."' AND prelis < 0)";// devo prendere comunque anche tutti i righi sconto
-      $sql = "SELECT ".$tablerig.".quanti, ".$tablerig.".prelis, ".$tableiva.".aliquo, ".$tableart.".codice FROM ".$tablerig." LEFT JOIN ".$tableiva." ON ".$tableiva.".codice = ".$tablerig.".codvat "." LEFT JOIN ".$tableart." ON ".$tablerig.".codart = ".$tableart.".codice ".$where;
-      $totalprice=0;$totalsecdep=0;
-	  //echo "<br> sql:",$sql;
-	  //echo "<br> devo restituire IVA compresa";
-      if ($result = mysqli_query($link, $sql)) {
-		//echo "<br>Ciclo i righi del db";
-        foreach ($result as $res){
-          //echo"<pre>",print_r($res),"</pre>";
-          $totalprice += ($res['prelis']*$res['quanti'])+((($res['prelis']*$res['quanti'])*$res['aliquo'])/100);
-			//echo "Total price aggiornato:",$totalprice;
-          if ($security_deposit==TRUE){
-            // controllo se il rigo è un alloggio
-            //echo "<br>Aggiungo deposito cauzionale";
-            $sql = "SELECT custom_field FROM ".$tableart." WHERE ".$tableart.".codice = '".$res['codice']."'";
-            if ($result = mysqli_query($link, $sql)) {
-              $row = mysqli_fetch_assoc($result);
-              if (isset($row['custom_field']) && ($data = json_decode($row['custom_field'],true))){// se c'è un json in codart
-                if (isset($data['vacation_rental']['accommodation_type'])){   // è un alloggio
-                  if($security_deposit_val==-1){// il deposito cauzionale non è mai stato registrato in tesbro (retrocompatibilità)
-                      if (isset($data['vacation_rental']['security_deposit']) && floatval($data['vacation_rental']['security_deposit'])>0){// prendo il deposito di default in artico
-                        $totalsecdep += floatval($data['vacation_rental']['security_deposit']);
-                      }
-                  }else{// altrimenti prendo quello memorizzato in tesbro
-                    $totalsecdep += floatval($security_deposit_val);
-                  }
-               }
-              }
-            }else{
-              echo "Error: " . $sql . "<br>" . mysqli_error($link);
-            }
-          }else{
-            //echo "<br>NON aggiungo deposito cauzionale";
-          }
-        }
-        if (intval($preeminent_vat)>0){
-          $sql = "SELECT aliquo FROM ".$tableiva." WHERE ".$tableiva.".codice = ".intval($preeminent_vat);
-          if ($result = mysqli_query($link, $sql)) {
-            $row = mysqli_fetch_assoc($result);
-            $spevat=$row['aliquo'];
-          }else{
-            echo "Error: " . $sql . "<br>" . mysqli_error($link);
-          }
-        }else{
-          $spevat=0;
-        }
-        $where = " WHERE id_tes = '".$tesbro."'";
-        $sql = "SELECT speban FROM ".$tabletes.$where." LIMIT 1";
         if ($result = mysqli_query($link, $sql)) {
-          $rowtes = mysqli_fetch_assoc($result);
-          $rowtes['speban']=(isset($rowtes['speban']))?$rowtes['speban']:0;
-          $rowtes['speban'] = $rowtes['speban']+(($rowtes['speban']*$spevat)/100);
-          $totalprice= $totalprice+$rowtes['speban'];// aggiungo eventuali spese bancarie          
-        }else{
-          echo "Error: " . $sql . "<br>" . mysqli_error($link);die;
+            $rowtesbf = mysqli_fetch_assoc($result);
+            if (isset($rowtesbf['custom_field']) && ($data_tesbro = json_decode($rowtesbf['custom_field'], true))) {
+                if (isset($data_tesbro['vacation_rental']['security_deposit'])) {
+                    $security_deposit_val = $data_tesbro['vacation_rental']['security_deposit'];
+                }
+            }
         }
-		return  $totalprice+$totalsecdep;
-      }else {
-         echo "Error: " . $sql . "<br>" . mysqli_error($link);
-      }
+
+        // === COSTRUZIONE DELLA QUERY ===
+
+        // VAT FALSE = imponibile
+        if ($vat == FALSE) {
+            $where = " WHERE r.id_tes = '" . $tesbro . "'";
+            $need_artico_join = false;
+
+            if ($tourist_tax == TRUE && $add_extra == FALSE) {
+                $where .= " AND (r.codart LIKE 'TASSA-TURISTICA%' OR (a.custom_field REGEXP 'accommodation_type'))";
+                $need_artico_join = true;
+            } elseif ($add_extra == FALSE && $tourist_tax == FALSE) {
+                $where .= " AND (a.custom_field REGEXP 'accommodation_type') AND r.codart NOT LIKE 'TASSA-TURISTICA%'";
+                $need_artico_join = true;
+            } elseif ($tourist_tax == FALSE && $add_extra == TRUE) {
+                $where .= " AND r.codart NOT LIKE 'TASSA-TURISTICA%'";
+            }
+
+            $sql = "SELECT SUM(COALESCE(r.quanti, 0) * COALESCE(r.prelis, 0)) AS totalprice FROM " . $tablerig . " r";
+
+            if ($need_artico_join) {
+                $sql .= " LEFT JOIN " . $tableart . " a ON a.codice = CASE 
+                    WHEN r.codart IS NOT NULL AND r.codart != '' THEN r.codart 
+                    WHEN r.codice_fornitore IS NOT NULL AND r.codice_fornitore != '' THEN r.codice_fornitore 
+                    ELSE NULL END";
+            }
+
+            $sql .= $where;
+
+            if ($result = mysqli_query($link, $sql)) {
+                $row = mysqli_fetch_assoc($result);
+
+                // Somma spese bancarie
+                $sql = "SELECT speban FROM " . $tabletes . " WHERE id_tes = " . $tesbro . " LIMIT 1";
+                if ($result = mysqli_query($link, $sql)) {
+                    $rowtes = mysqli_fetch_assoc($result);
+                    $rowtes['speban'] = isset($rowtes['speban']) ? $rowtes['speban'] : 0;
+                    $totalprice = $row['totalprice'] + $rowtes['speban'];
+                    return $totalprice;
+                } else {
+                    echo "Error: " . $sql . "<br>" . mysqli_error($link);
+                }
+            } else {
+                echo "Error: " . $sql . "<br>" . mysqli_error($link);
+            }
+        } else {
+            // === VAT TRUE = IVA COMPRESA ===
+            $where = " WHERE (r.id_tes = '" . $tesbro . "' OR (r.id_tes = '" . $tesbro . "' AND r.prelis < 0))";
+            $sql = "SELECT r.quanti, r.prelis, i.aliquo, a.codice 
+                    FROM " . $tablerig . " r
+                    LEFT JOIN " . $tableiva . " i ON i.codice = r.codvat
+                    LEFT JOIN " . $tableart . " a ON r.codart = a.codice " . $where;
+
+            $totalprice = 0;
+            $totalsecdep = 0;
+
+            if ($result = mysqli_query($link, $sql)) {
+                foreach ($result as $res) {
+                    $prezzo = ($res['prelis'] * $res['quanti']);
+                    $iva = ($prezzo * $res['aliquo']) / 100;
+                    $totalprice += $prezzo + $iva;
+
+                    if ($security_deposit == TRUE) {
+                        $sql = "SELECT custom_field FROM " . $tableart . " WHERE codice = '" . $res['codice'] . "'";
+                        if ($result2 = mysqli_query($link, $sql)) {
+                            $row2 = mysqli_fetch_assoc($result2);
+                            if (isset($row2['custom_field']) && ($data = json_decode($row2['custom_field'], true))) {
+                                if (isset($data['vacation_rental']['accommodation_type'])) {
+                                    if ($security_deposit_val == -1) {
+                                        if (isset($data['vacation_rental']['security_deposit']) && floatval($data['vacation_rental']['security_deposit']) > 0) {
+                                            $totalsecdep += floatval($data['vacation_rental']['security_deposit']);
+                                        }
+                                    } else {
+                                        $totalsecdep += floatval($security_deposit_val);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Calcolo spese bancarie con IVA
+                if (intval($preeminent_vat) > 0) {
+                    $sql = "SELECT aliquo FROM " . $tableiva . " WHERE codice = " . intval($preeminent_vat);
+                    if ($result = mysqli_query($link, $sql)) {
+                        $row = mysqli_fetch_assoc($result);
+                        $spevat = $row['aliquo'];
+                    } else {
+                        echo "Error: " . $sql . "<br>" . mysqli_error($link);
+                    }
+                } else {
+                    $spevat = 0;
+                }
+
+                $sql = "SELECT speban FROM " . $tabletes . " WHERE id_tes = '" . $tesbro . "' LIMIT 1";
+                if ($result = mysqli_query($link, $sql)) {
+                    $rowtes = mysqli_fetch_assoc($result);
+                    $rowtes['speban'] = isset($rowtes['speban']) ? $rowtes['speban'] : 0;
+                    $rowtes['speban'] += ($rowtes['speban'] * $spevat) / 100;
+                    $totalprice += $rowtes['speban'];
+                } else {
+                    echo "Error: " . $sql . "<br>" . mysqli_error($link);
+                    die;
+                }
+
+                return $totalprice + $totalsecdep;
+            } else {
+                echo "Error: " . $sql . "<br>" . mysqli_error($link);
+            }
+        }
+    } else {
+        return "tesbro vuoto";
     }
-  }else{
-    $err="tesbro vuoto";
-    return $err ;
-  }
 }
+
 
 function get_total_promemo($startprom,$endprom){// STAT
   global $link, $azTables, $gTables;// posso chiamare la funzione con entrambi i metodi

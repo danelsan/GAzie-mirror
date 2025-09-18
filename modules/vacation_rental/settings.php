@@ -100,19 +100,6 @@ if (isset($_POST['submitOTA']) && $_POST['submitOTA']=='ota'){// se è stato ric
  $data['vacation_rental']['tourtax']=$_POST['tourtax'];// inserisco/modifico il valore impostato nel form
  $form['custom_field'] = json_encode($data);
  gaz_dbi_put_row($gTables['agenti'], 'id_fornitore', intval($_POST['agente']), 'custom_field', $form['custom_field']);
-  /*
-   $table = 'rental_feedback_elements';
-    $set['element']=  mysqli_real_escape_string($link,substr($_POST['newElement'],0,64));
-    $set['description']=  mysqli_real_escape_string($link,substr($_POST['description'],0,100));
-    $set['facility']=  intval($_POST['newFacility']);
-    $set['status']=  "MODIFIED";
-    $columns = array('element', 'description', 'facility', 'status');
-    $codice=array();
-    $codice[0]="id";
-    $codice[1]=intval($_POST['SaveupdElement']);
-    $newValue = array('element'=>$set['element'], 'description'=>$set['description'], 'facility'=>$set['facility'],'status'=>$set['status']);
-    tableUpdate($table, $columns, $codice, $newValue);
-    */
 }
 if (isset($_POST['delElement']) && intval($_POST['delElement'])>0){// se è stato richiesto di cancellare un elemento feedback
   $genclass="";
@@ -432,11 +419,11 @@ $point = gaz_dbi_dyn_query("*", $gTables['company_config'], " var LIKE 'point%'"
                         <?php
                         // Query per ottenere gli agenti
                        $sql = "
-    SELECT ag.id_fornitore, CONCAT(na.ragso1, ' ', na.ragso2) AS nome_agente
-    FROM {$gTables['agenti']} AS ag
-    JOIN {$gTables['clfoco']} AS cf ON cf.codice = ag.id_fornitore
-    JOIN {$gTables['anagra']} AS na ON na.id = cf.id_anagra
-";
+                            SELECT ag.id_fornitore, CONCAT(na.ragso1, ' ', na.ragso2) AS nome_agente
+                            FROM {$gTables['agenti']} AS ag
+                            JOIN {$gTables['clfoco']} AS cf ON cf.codice = ag.id_fornitore
+                            JOIN {$gTables['anagra']} AS na ON na.id = cf.id_anagra
+                        ";
                         $result = gaz_dbi_query($sql);
                         if ($result->num_rows > 0) {
 
@@ -457,17 +444,17 @@ $point = gaz_dbi_dyn_query("*", $gTables['company_config'], " var LIKE 'point%'"
                         } else {
                             echo "Nessun agente trovato.";
                         }
-// Campo input per tourtax, inizialmente "NO"
-?>
-   <label for="tourtax">Tourtax: </label>
-<select id="tourtax" name="tourtax">
-    <option value="" selected></option>
-    <option value="NO">No</option>
-    <option value="SI">Sì</option>
-</select>
-<!-- Pulsante di submit inizialmente nascosto -->
-<button name="submitOTA" id="submitOtaButton" value="ota" type="submit" style="display:none;">Inserisci</button>
-<?php
+                        // Campo input per tourtax, inizialmente "NO"
+                        ?>
+                           <label for="tourtax">Tourtax: </label>
+                        <select id="tourtax" name="tourtax">
+                            <option value="" selected></option>
+                            <option value="NO">No</option>
+                            <option value="SI">Sì</option>
+                        </select>
+                        <!-- Pulsante di submit inizialmente nascosto -->
+                        <button name="submitOTA" id="submitOtaButton" value="ota" type="submit" style="display:none;">Inserisci</button>
+                        <?php
 
                         ?>
                         </div>

@@ -538,7 +538,6 @@ $strScript = array(
 		'select_guest' => 'Seleziona gli ospiti ',
 		'max_capability' => 'Capacità massima ',
 		'persons' => ' persone',
-		'adults' => 'adulti',
 		'children' => 'bambini fino ad anni ',
 		'price' => 'prezzo',
 		'each' => 'cadauno',

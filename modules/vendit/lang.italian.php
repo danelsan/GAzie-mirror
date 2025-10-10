@@ -372,7 +372,8 @@ $strScript = array("admin_client.php" =>
 			'lotinsuf' => 'Per questo ID lotto non c\'è la quantità richiesta',
 			'forceone' => 'Un articolo prevede la matricola/numero di serie pertanto la quantit&agrave; &egrave; stata forzata ad 1',
 			'filesize' => 'File troppo grande',
-			'filenoload' => 'Il file non è stato caricato'
+			'filenoload' => 'Il file non è stato caricato',
+			'business_date_cessation' => 'Data successiva alla cessazione'
 		),
         'consentivisua' => '<center>ATTENZIONE MANCANO I DATI FISCALI</center>'
     ),

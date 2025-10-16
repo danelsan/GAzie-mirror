@@ -8120,5 +8120,5 @@ INSERT INTO `gaz_municipalities` (`id`, `id_province`, `name`, `postal_code`, `d
 -- START_WHILE ( questo e' un tag che serve per istruire install.php ad INIZIARE ad eseguire le query seguenti su tutte le aziende dell'installazione)
 ALTER TABLE `gaz_XXXagenti`	ADD COLUMN `custom_field` TEXT NULL AFTER `tipo_contratto`;
 INSERT INTO `gaz_XXXcompany_config` (`description`, `var`, `val`) VALUES ('Data (GG/MM/AAAA) oltre la quale non è consentita l\'emissione di documenti','business_date_cessation','');
-ALTER TABLE `gaz_XXXcompany_config` ADD `lang_id` INT NULL DEFAULT 1 AFTER `id`;
+ALTER TABLE `gaz_XXXcompany_config` ADD `lang_id` INT NULL DEFAULT 1 AFTER `id`,	ADD INDEX (`lang_id`);
 -- STOP_WHILE ( questo e' un tag che serve per istruire install.php a SMETTERE di eseguire le query su tutte le aziende dell'installazione )

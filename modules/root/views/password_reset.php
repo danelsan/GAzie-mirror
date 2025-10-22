@@ -5,7 +5,7 @@
 // Controllo l'indirizzo mail dell'amministratore del sito GAzie admin mail
 $domain_ok = false;
 $admin_mail = gaz_dbi_get_row($gTables['config'], 'variable', 'admin_mail')['cvalue'];
-if ($admin_mail && filter_var($admin_mail, FILTER_VALIDATE_EMAIL)) {
+if ($admin_mail && filter_var($admin_mail, FILTER_VALIDATE_EMAIL) && $admin_mail<>"order@mydomain.com") {
   $domain = substr(strrchr($admin_mail, '@'), 1);
     if ($domain) {
         // preferisci checkdnsrr se disponibile
@@ -22,7 +22,7 @@ if ($admin_mail && filter_var($admin_mail, FILTER_VALIDATE_EMAIL)) {
         // se nessuna funzione disponibile lasciamo $domain_ok = false (non verificabile)
     }
 }
-
+echo "ver:",$admin_mail;
 if ($login->passwordResetLinkIsValid() == true) {
     ?>
     <form method="post" onsubmit="document.getElementById('login-password').value=forge_sha256(document.getElementById('login-password').value);document.getElementById('user_password_new').value=forge_sha256(document.getElementById('user_password_new').value);document.getElementById('user_password_repeat').value=forge_sha256(document.getElementById('user_password_repeat').value);" action="login_password_reset.php" name="new_password_form" id="resetform">
